@@ -4,8 +4,12 @@ SendMode Input  ; Recommended for new scripts due to its superior speed and reli
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 SetControlDelay -1
 
-programName := "Uhaczka by Frostspikee"
+programName := "Uhaczka"
+Ico := % A_WorkingDir . "\icons\uh.ico"
 
+OnMessage(0x111,"WM_COMMAND")
+
+Menu, Tray, Icon, %Ico%, 0
 Gui, Show, X200 Y200 W300 H300, %programName%
 Gui, Add, Button, w133 gSelectCoords, Wybierz pozycję celu
 Gui, Add, Text, vTankerPos, x0 y0
@@ -75,3 +79,22 @@ WatchCursor:
 		WinActivate, %programName%
 	}
 return
+
+WM_Command(wP)
+{
+  Global tray_icon_go, tray_icon_paused
+  Static Suspend = 65305, Pause = 65306
+
+  If (wP = Pause)	;select OR deselect?
+  {
+    If ! A_IsPaused												;Paused --> NOT Paused ?
+      Menu, TRAY, Icon, %tray_icon_paused%	;,,1
+    Else ;If A_IsPaused ?									   ;NOT Paused --> Paused ?
+      Menu, TRAY, Icon, %tray_icon_go%	;,,1
+  }
+  Else ;(wP <> Pause)	(ie just R-CLICK systray icon)
+  {
+    If A_IsPaused
+      Menu, TRAY, Icon, %tray_icon_paused%	;,,1		;Menu, Tray, Icon, Shell32.dll, 110, 1 <-- maybe should use dll icons?
+  }
+} 
