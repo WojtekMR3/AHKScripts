@@ -1,25 +1,30 @@
-﻿#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+﻿#NoEnv
+#SingleInstance off  ; Recommended for performance and compatibility with future AutoHotkey releases.
 ; #Warn  ; Enable warnings to assist with detecting common errors.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 SetControlDelay -1
 
-programName := "Uhaczka"
-Ico := % A_WorkingDir . "\icons\uh.ico"
+programName := "Uhaczka by Frostspiked"
+IniRead, OutputVar, %A_ScriptFullPath%:Stream:$DATA, Options, Bind_htks, 3
+Global Bind_htks := OutputVar
 
 OnMessage(0x111,"WM_COMMAND")
 
-Menu, Tray, Icon, %Ico%, 0
 Gui, Show, X200 Y200 W300 H300, %programName%
 Gui, Add, Button, w133 gSelectCoords, Wybierz pozycję celu
-Gui, Add, Text, vTankerPos, x0 y0
+Gui, Add, Text, vTankerPos W300, x0 y0
 Gui, Add, Text,, Hotkey UHa ; The ym option starts a new column of controls.
 Gui, Add, Hotkey, vUH_hotkey, F1
+Gui, Add, Button, w133 gAdd_htk, Dodaj hotkey'a
+Gui, Add, Button, w133 gRem_htk, Usuń hotkey'a
 
 Gui, Add, Text,, Hotkeye odpalające uhaczkę.
-Loop 5 {
+
+Loop %Bind_htks% {
     Gui, Add, Hotkey, vTrigger_htk%A_Index% gTrigger_htk, F2
 }
+Gui, Show, AutoSize
 
 ; Load values from store
 IniRead, OutputVar, %A_ScriptFullPath%:Stream:$DATA, Options, TankerPos, x0 y0
@@ -28,14 +33,32 @@ GuiControl, Move, TankerPos, W300
 IniRead, OutputVar, %A_ScriptFullPath%:Stream:$DATA, Options, UH_hotkey, 1
 GuiControl, Text, UH_hotkey, %OutputVar%
 
+OnExit("SaveCache")
+
 return
 
-GuiClose:
+SaveCache(ExitReason, ExitCode)
+{
 	GuiControlGet, TankerPos ,, TankerPos
 	IniWrite, %TankerPos%, %A_ScriptFullPath%:Stream:$DATA, Options, TankerPos
 	GuiControlGet, htk ,, UH_hotkey
 	IniWrite, %htk%, %A_ScriptFullPath%:Stream:$DATA, Options, UH_hotkey
+	IniWrite, %Bind_htks%, %A_ScriptFullPath%:Stream:$DATA, Options, Bind_htks
+}
+
+GuiClose:
 	ExitApp
+return
+
+Add_htk:
+	Bind_htks++
+	Gui, Add, Hotkey, vTrigger_htk%Bind_htks% gTrigger_htk, F2
+	Gui, Show, AutoSize
+return
+
+Rem_htk:
+	Bind_htks--
+	Reload
 return
 
 Trigger_htk:
@@ -51,23 +74,25 @@ Trigger_htk:
 return
 
 Uhaczka:
-	sleep 25
+	sleep 80 ; fix for low
 	GuiControlGet, coords ,, TankerPos
 	GuiControlGet, UH_Htk ,, UH_hotkey
 	ControlFocus,, Tibia -
 	ControlSend,, {%UH_Htk% down}, Tibia -
+	SetControlDelay -1
 	ControlClick, %coords%, Tibia -,,Left
 return
 
 SelectCoords:
+	WinActivate, Tibia 
 	SetTimer, WatchCursor, 20
 	return
 return
 
 WatchCursor:
-	CoordMode, Mouse, Screen
+	CoordMode, Mouse, Relative
 	MouseGetPos, xpos, ypos
-	ToolTip, `Select training dummy position`n`x: %xpos% y: %ypos%`
+	ToolTip, `Select position`n`x: %xpos% y: %ypos%`
 	
 	if (GetKeyState("LButton")) {
 		MsgBox, , , %xpos% %ypos%, 0.3
