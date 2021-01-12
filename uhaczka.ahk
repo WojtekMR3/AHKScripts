@@ -12,23 +12,17 @@ programName := "Uhaczka by Frostspiked"
 Global IniSections := []
 Global IniSections ["Singular"] 
 := { pos: 0
-	 , uh_htk: "f3"
-	 , bind_htks: 3}
+	 , uh_htk: "f3"}
 Global IniSections ["Uhaczka Hotkeys"] := {}
 
 pth = %A_ScriptFullPath%:Stream:$DATA
 Global ini := ReadINI(pth)
 
-Global Bind_htks := ini["Singular"].bind_htks
-If (!Bind_htks) {
-	Bind_htks := 3
-}
-
-ln := % ini["Uhaczka Hotkeys"].Length()
-If ln = 0
+ln := ini["Uhaczka Hotkeys"].Count()
+If (!ln)
 {
-	ini["Uhaczka Hotkeys"] := IniSections ["Uhaczka Hotkeys"]
-}
+	ini["Uhaczka Hotkeys"] := IniSections["Uhaczka Hotkeys"].Clone()
+} 
 
 OnMessage(0x111,"WM_COMMAND")
 
@@ -41,9 +35,6 @@ Gui, Add, Button, w133 gAdd_htk, Dodaj hotkey'a
 Gui, Add, Button, w133 gRem_htk, Usuń hotkey'a
 
 Gui, Add, Text,, Hotkeye odpalające uhaczkę.
-;Loop %Bind_htks% {
-    ;Gui, Add, Hotkey, vTrigger_htk%A_Index% gTrigger_htk, F2	
-;}
 
 For key, value in ini["Uhaczka Hotkeys"]
 		Gui, Add, Hotkey, vTrigger_htk%key% gTrigger_htk, %value%
@@ -67,10 +58,9 @@ SaveCache(ExitReason, ExitCode)
 	IniSections["Singular"].pos := TankerPos
 	GuiControlGet, htk ,, UH_hotkey
 	IniSections["Singular"].uh_htk := htk
-	IniSections["Singular"].bind_htks := Bind_htks
 
 	; Retrieve all hotkey binds.
-	Loop % ini["Uhaczka Hotkeys"].Length() {
+	Loop % ini["Uhaczka Hotkeys"].Count() {
 		GuiControlGet, htk ,, Trigger_htk%A_Index%
 		; Create array and save it to db.
 		IniSections["Uhaczka Hotkeys"].Push(htk)
@@ -86,14 +76,12 @@ return
 
 Add_htk:
 	ini["Uhaczka Hotkeys"].Push("F2")
-	Bind_htks++
-	ln := ini["Uhaczka Hotkeys"].Length()
+	ln := ini["Uhaczka Hotkeys"].Count()
 	Gui, Add, Hotkey, vTrigger_htk%ln% gTrigger_htk, F2
 	Gui, Show, AutoSize
 return
 
 Rem_htk:
-	Bind_htks--
 	ini["Uhaczka Hotkeys"].Pop()
 	;Gui, Show, AutoSize
 	;WinSet, Redraw
