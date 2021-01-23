@@ -1,5 +1,6 @@
 ﻿#Include lib/obj2str.ahk
 #Include lib/iniMaker.ahk
+#Include lib/AutoXYWH.ahk
 
 #NoEnv
 #SingleInstance off  ; Recommended for performance and compatibility with future AutoHotkey releases.
@@ -11,18 +12,23 @@ SetControlDelay -1
 programName := "Uhaczka by Frostspiked"
 Global IniSections := []
 Global IniSections ["Singular"] 
-:= { pos: 0
+:= { pos: "x0 y0"
 	 , uh_htk: "f3"}
-Global IniSections ["Uhaczka Hotkeys"] := {}
+Global IniSections ["UhaczkaHotkeys"] := {}
 
-pth = %A_ScriptFullPath%:Stream:$DATA
-Global ini := ReadINI(pth)
+Global cachePath := "uhCache"
+;cachePth = %A_ScriptFullPath%:Stream:$DATA
+Global ini := ReadINI(cachePath)
 
-ln := ini["Uhaczka Hotkeys"].Count()
-If (!ln)
+if (!ini.Singular.count()) {
+	ini.Singular := IniSections.Singular.Clone()
+	ini.Singular.uh_htk := IniSections.Singular.uh_htk
+}
+
+If (!ini.UhaczkaHotkeys.Count())
 {
-	ini["Uhaczka Hotkeys"] := IniSections["Uhaczka Hotkeys"].Clone()
-} 
+	ini["UhaczkaHotkeys"] := IniSections["UhaczkaHotkeys"].Clone()
+}
 
 OnMessage(0x111,"WM_COMMAND")
 
@@ -34,13 +40,12 @@ Gui, Add, Hotkey, vUH_hotkey, F1
 Gui, Add, Button, w133 gAdd_htk, Dodaj hotkey'a
 Gui, Add, Button, w133 gRem_htk, Usuń hotkey'a
 
-Gui, Add, Text,, Hotkeye odpalające uhaczkę.
+Gui, Add, Text,, Hotkeye Uhaczki.
 
-For key, value in ini["Uhaczka Hotkeys"]
+For key, value in ini["UhaczkaHotkeys"]
 		Gui, Add, Hotkey, vTrigger_htk%key% gTrigger_htk, %value%
 
-;Gui, Add, Picture, x0 y0 +BackgroundTrans, insta.png
-;Gui, Add, Picture, x0 y0 +BackgroundTrans, %A_ScriptDir%\bg\gray.jpg
+;Gui, Add, Picture, x0 y0 +0x4000000 vImg1, %A_ScriptDir%\bg\gray.jpg
 
 ; Load values from store
 
@@ -48,9 +53,16 @@ GuiControl, Text, TankerPos, % ini["Singular"].pos
 GuiControl, Move, TankerPos, W300
 GuiControl, Text, UH_hotkey, % ini["Singular"].uh_htk
 Gui, Show, AutoSize, %programName%
+WinGetPos,,, GuiWidth, GuiHeight, ahk_id %hWndGui%
+
 
 OnExit("SaveCache")
 return
+
+; Everytime gui resizes
+GuiSize:
+  AutoXYWH("Img1", "wh", Redraw = False)
+Return
 
 SaveCache(ExitReason, ExitCode)
 {
@@ -60,14 +72,14 @@ SaveCache(ExitReason, ExitCode)
 	IniSections["Singular"].uh_htk := htk
 
 	; Retrieve all hotkey binds.
-	Loop % ini["Uhaczka Hotkeys"].Count() {
+	Loop % ini["UhaczkaHotkeys"].Count() {
 		GuiControlGet, htk ,, Trigger_htk%A_Index%
 		; Create array and save it to db.
-		IniSections["Uhaczka Hotkeys"].Push(htk)
+		IniSections["UhaczkaHotkeys"].Push(htk)
 	}
 
-	path = %A_ScriptFullPath%:Stream:$DATA
-	WriteINI(IniSections, path)
+	;cachePth = %A_ScriptFullPath%:Stream:$DATA
+	WriteINI(IniSections, cachePath)
 }
 
 GuiClose:
@@ -75,14 +87,14 @@ GuiClose:
 return
 
 Add_htk:
-	ini["Uhaczka Hotkeys"].Push("F2")
-	ln := ini["Uhaczka Hotkeys"].Count()
+	ini["UhaczkaHotkeys"].Push("F2")
+	ln := ini["UhaczkaHotkeys"].Count()
 	Gui, Add, Hotkey, vTrigger_htk%ln% gTrigger_htk, F2
 	Gui, Show, AutoSize
 return
 
 Rem_htk:
-	ini["Uhaczka Hotkeys"].Pop()
+	ini["UhaczkaHotkeys"].Pop()
 	;Gui, Show, AutoSize
 	;WinSet, Redraw
 	Reload
