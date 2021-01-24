@@ -3,5 +3,7 @@
 !*/
 !lib/**
 !icons/**
+!bg/**
 !clicker.ahk
 !uhaczka.ahk
+!.gitignore
