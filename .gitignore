@@ -1,4 +1,7 @@
 *
 
-!.gitignore
-!lib/
+!*/
+!lib/**
+!icons/**
+!clicker.ahk
+!uhaczka.ahk
