@@ -1,8 +1,4 @@
 *
 
-arrowki.ahk
-
-!/lib
-!/icons
-!uhaczka.ahk
-!clicker.ahk
+!.gitignore
+!lib/
