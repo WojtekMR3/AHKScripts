@@ -1,6 +1,5 @@
 ﻿#Include lib/obj2str.ahk
 #Include lib/iniMaker.ahk
-#Include lib/AutoXYWH.ahk
 
 #NoEnv
 #SingleInstance off  ; Recommended for performance and compatibility with future AutoHotkey releases.
@@ -17,8 +16,8 @@ Global IniSections ["Singular"]
 Global IniSections ["UhaczkaHotkeys"] := {}
 
 Global cachePath := "uhCache"
-;cachePth = %A_ScriptFullPath%:Stream:$DATA
-Global ini := ReadINI(cachePath)
+cachePth = %A_ScriptFullPath%:Stream:$DATA
+Global ini := ReadINI(cachePth)
 
 if (!ini.Singular.count()) {
 	ini.Singular := IniSections.Singular.Clone()
@@ -45,10 +44,7 @@ Gui, Add, Text,, Hotkeye Uhaczki.
 For key, value in ini["UhaczkaHotkeys"]
 		Gui, Add, Hotkey, vTrigger_htk%key% gTrigger_htk, %value%
 
-;Gui, Add, Picture, x0 y0 +0x4000000 vImg1, %A_ScriptDir%\bg\gray.jpg
-
 ; Load values from store
-
 GuiControl, Text, TankerPos, % ini["Singular"].pos
 GuiControl, Move, TankerPos, W300
 GuiControl, Text, UH_hotkey, % ini["Singular"].uh_htk
@@ -58,11 +54,6 @@ WinGetPos,,, GuiWidth, GuiHeight, ahk_id %hWndGui%
 
 OnExit("SaveCache")
 return
-
-; Everytime gui resizes
-GuiSize:
-  AutoXYWH("Img1", "wh", Redraw = False)
-Return
 
 SaveCache(ExitReason, ExitCode)
 {
@@ -78,8 +69,8 @@ SaveCache(ExitReason, ExitCode)
 		IniSections["UhaczkaHotkeys"].Push(htk)
 	}
 
-	;cachePth = %A_ScriptFullPath%:Stream:$DATA
-	WriteINI(IniSections, cachePath)
+	cachePth = %A_ScriptFullPath%:Stream:$DATA
+	WriteINI(IniSections, cachePth)
 }
 
 GuiClose:
