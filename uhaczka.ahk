@@ -15,9 +15,9 @@ Global IniSections ["Singular"]
 	 , uh_htk: "f3"}
 Global IniSections ["UhaczkaHotkeys"] := {}
 
-Global cachePath := "uhCache"
 cachePth = %A_ScriptFullPath%:Stream:$DATA
-Global ini := ReadINI(cachePth)
+Global cachePath := cachePth
+Global ini := ReadINI(cachePath)
 
 if (!ini.Singular.count()) {
 	ini.Singular := IniSections.Singular.Clone()
@@ -31,25 +31,26 @@ If (!ini.UhaczkaHotkeys.Count())
 
 OnMessage(0x111,"WM_COMMAND")
 
-;Gui, Show, X200 Y200 W300 H300, %programName%
 Gui, Add, Button, w133 gSelectCoords, Wybierz pozycję celu
 Gui, Add, Text, vTankerPos W100, x0 y0
 Gui, Add, Text,, Hotkey UHa ; The ym option starts a new column of controls.
 Gui, Add, Hotkey, vUH_hotkey, F1
-Gui, Add, Button, w133 gAdd_htk, Dodaj hotkey'a
-Gui, Add, Button, w133 gRem_htk, Usuń hotkey'a
+Gui, Add, Button, w120 gAdd_htk, Dodaj hotkey'a
+Gui, Add, Button, w120 gRem_htk, Usuń hotkey'a
 
 Gui, Add, Text,, Hotkeye Uhaczki.
 
-For key, value in ini["UhaczkaHotkeys"]
-		Gui, Add, Hotkey, vTrigger_htk%key% gTrigger_htk, %value%
+For num, htk in ini["UhaczkaHotkeys"] {
+		Gui, Add, Hotkey, vTrigger_htk%num% gTrigger_htk, %htk%
+		Hotkey, ~%htk%, Uhaczka, On
+		savedHK%num% = %htk%
+}
 
 ; Load values from store
 GuiControl, Text, TankerPos, % ini["Singular"].pos
 GuiControl, Move, TankerPos, W300
 GuiControl, Text, UH_hotkey, % ini["Singular"].uh_htk
 Gui, Show, AutoSize, %programName%
-WinGetPos,,, GuiWidth, GuiHeight, ahk_id %hWndGui%
 
 
 OnExit("SaveCache")
@@ -69,8 +70,7 @@ SaveCache(ExitReason, ExitCode)
 		IniSections["UhaczkaHotkeys"].Push(htk)
 	}
 
-	cachePth = %A_ScriptFullPath%:Stream:$DATA
-	WriteINI(IniSections, cachePth)
+	WriteINI(IniSections, cachePath)
 }
 
 GuiClose:
@@ -86,8 +86,6 @@ return
 
 Rem_htk:
 	ini["UhaczkaHotkeys"].Pop()
-	;Gui, Show, AutoSize
-	;WinSet, Redraw
 	Reload
 return
 
