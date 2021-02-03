@@ -50,8 +50,10 @@ For num, htk in ini["UhaczkaHotkeys"] {
 GuiControl, Text, TankerPos, % ini["Singular"].pos
 GuiControl, Move, TankerPos, W300
 GuiControl, Text, UH_hotkey, % ini["Singular"].uh_htk
-Gui, Show, AutoSize, %programName%
 
+; Remove '.exe' from title
+Title := StrReplace(A_ScriptName, .exe, " ")
+Gui, Show, AutoSize, %Title%
 
 OnExit("SaveCache")
 return
