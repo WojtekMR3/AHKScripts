@@ -31,17 +31,19 @@ If (!ini.UhaczkaHotkeys.Count())
 
 OnMessage(0x111,"WM_COMMAND")
 
-Gui, Add, Button, w133 gSelectCoords, Wybierz pozycję celu
-Gui, Add, Text, vTankerPos W100, x0 y0
-Gui, Add, Text,, Hotkey UHa ; The ym option starts a new column of controls.
-Gui, Add, Hotkey, vUH_hotkey, F1
-Gui, Add, Button, w120 gAdd_htk, Dodaj hotkey'a
-Gui, Add, Button, w120 gRem_htk, Usuń hotkey'a
+Gui, Add, Button, w133 gSelectCoords, Select target position
+Gui, Add, Text, xs xp+2 vTankerPos W50 Section
 
-Gui, Add, Text,, Hotkeye Uhaczki.
+Gui, Add, Text, x10 yp+40, UH Rune Hotkey in game ; The ym option starts a new column of controls.
+Gui, Add, Hotkey, vUH_hotkey, F1
+
+Gui, Add, Text, yp+40, AutoUH Hotkeys.
+Gui, Add, Button, w40 gAdd_htk Section, Add
+Gui, Add, Button, w60 gRem_htk ys, Remove
+;Gui Add, Text, xs w140 h1 +0x01
 
 For num, htk in ini["UhaczkaHotkeys"] {
-		Gui, Add, Hotkey, vTrigger_htk%num% gTrigger_htk, %htk%
+		Gui, Add, Hotkey, xs vTrigger_htk%num% gTrigger_htk, %htk%
 		Hotkey, ~%htk%, Uhaczka, On
 		savedHK%num% = %htk%
 }
@@ -53,6 +55,7 @@ GuiControl, Text, UH_hotkey, % ini["Singular"].uh_htk
 
 ; Remove '.exe' from title
 Title := StrReplace(A_ScriptName, .exe, " ")
+Title = %Title% by Frost
 Gui, Show, AutoSize, %Title%
 
 OnExit("SaveCache")

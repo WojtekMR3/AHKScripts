@@ -24,6 +24,11 @@ f7::
 return
 
 ~space::
+
+if (!WinActive("Tibia")) {
+ return
+}
+
 sleep 25
 
 Send, {Shift down}
