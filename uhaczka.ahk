@@ -1,5 +1,7 @@
 ﻿#Include lib/obj2str.ahk
 #Include lib/iniMaker.ahk
+#Include lib/JSON.ahk
+#Include lib/time.ahk
 
 #NoEnv
 #SingleInstance off  ; Recommended for performance and compatibility with future AutoHotkey releases.
@@ -7,6 +9,27 @@
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 SetControlDelay -1
+
+try  ; Attempts to execute code.
+{
+	WinHttp := ComObjCreate("MSXML2.XMLHTTP.6.0")
+	whr.SetTimeouts(15000, 30000, 15000, 30000)
+	WinHttp.Open("GET", "http://worldtimeapi.org/api/timezone/Europe/London", false)
+	WinHttp.Send()
+	obj := JSON.Load(WinHttp.ResponseText)
+	TimeNow := obj.unixtime
+}
+catch e  ; Handles the first error/exception raised by the block above.
+{
+	MsgBox, Server timed out! %e%
+	ExitApp
+}
+
+TimeExpire := UnixTimeFromDate("2021/05/05/15:35:10")
+if (TimeNow > TimeExpire) {
+	MsgBox, Expired!
+	ExitApp
+}
 
 programName := "Uhaczka by Frostspiked"
 Global IniSections := []
