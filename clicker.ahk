@@ -25,13 +25,14 @@ return
 
 ~space::
 
-if (!WinActive("Tibia")) {
- return
-}
+;if !(WinActive("Tibia -")) {
+ ;return
+;}
 
-sleep 25
-
-Send, {Shift down}
+sleep 35
+SendInput, {Shift down}
+sleep 1
+;controlSend,, {Shift down}, Tibia -
 SetControlDelay -1
 
 ControlClick, x963 y384, Tibia ,,Right
@@ -46,6 +47,7 @@ ControlClick, x913 y455, Tibia ,,Right
 ControlClick, x911 y385, Tibia ,,Right
 ControlClick, x900 y321, Tibia ,,Right
 
-Send, {Shift up}
+SendInput, {Shift up}
+;ControlSend,, {Shift up}, Tibia -
 
 return

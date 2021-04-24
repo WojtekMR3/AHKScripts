@@ -108,7 +108,7 @@ StartMain:
 	;GuiControl, Text, ScrStatus, Status: Running
 	;GuiControl, Move, ScrStatus, W300
 	;Gosub, Amulet
-	SetTimer, Amulet, 80
+	SetTimer, Amulet, 40
 return
 
 StopMain:
@@ -123,8 +123,9 @@ Amulet:
 	GuiControlGet, hotkey ,, Htk
 	PixelGetColor, color, %tPosX%, %tPosY%
 	if (tColor = color) {
-		ControlSend,, {%hotkey% down}, Tibia -
-		sleep 200
+		;SendInput, {%hotkey%}
+		ControlSend,, {%hotkey%}, Tibia -
+		sleep 180
 	}
 return
 

@@ -2,6 +2,7 @@
 #Include lib/iniMaker.ahk
 #Include lib/JSON.ahk
 #Include lib/time.ahk
+#Include lib/timeConverter.ahk
 
 #NoEnv
 #SingleInstance off  ; Recommended for performance and compatibility with future AutoHotkey releases.
@@ -14,10 +15,12 @@ try  ; Attempts to execute code.
 {
 	WinHttp := ComObjCreate("MSXML2.XMLHTTP.6.0")
 	whr.SetTimeouts(15000, 30000, 15000, 30000)
-	WinHttp.Open("GET", "http://worldtimeapi.org/api/timezone/Europe/London", false)
+	WinHttp.Open("GET", "http://worldclockapi.com/api/json/utc/now", false)
 	WinHttp.Send()
 	obj := JSON.Load(WinHttp.ResponseText)
-	TimeNow := obj.unixtime
+	FileTimeNow := obj.currentFileTime
+	DateTimeNow := JEE_DateFileTimeToAhk(FileTimeNow)
+	UnixTimeNow := UnixTimeFromDate(DateTimeNow)
 }
 catch e  ; Handles the first error/exception raised by the block above.
 {
@@ -25,12 +28,14 @@ catch e  ; Handles the first error/exception raised by the block above.
 	ExitApp
 }
 
-TimeExpire := UnixTimeFromDate("2021/05/05/15:35:10")
-if (TimeNow > TimeExpire) {
+UnixTimeExpire := UnixTimeFromDate("2021/05/20/10:00:00")
+if (UnixTimeNow > UnixTimeExpire) {
 	MsgBox, Expired!
 	ExitApp
 }
 
+Version := "1.0"
+Author := "Frostspiked"
 programName := "Uhaczka by Frostspiked"
 Global IniSections := []
 Global IniSections ["Singular"] 
@@ -63,7 +68,9 @@ Gui, Add, Hotkey, vUH_hotkey, F1
 Gui, Add, Text, yp+40, AutoUH Hotkeys.
 Gui, Add, Button, w40 gAdd_htk Section, Add
 Gui, Add, Button, w60 gRem_htk ys, Remove
-;Gui Add, Text, xs w140 h1 +0x01
+
+Gui, Add, StatusBar,,
+SB_SetText("by " . Author . " v" . Version, 1)
 
 For num, htk in ini["UhaczkaHotkeys"] {
 		Gui, Add, Hotkey, xs vTrigger_htk%num% gTrigger_htk, %htk%
@@ -78,7 +85,7 @@ GuiControl, Text, UH_hotkey, % ini["Singular"].uh_htk
 
 ; Remove '.exe' from title
 Title := StrReplace(A_ScriptName, .exe, " ")
-Title = %Title% by Frost
+Title = %Title%
 Gui, Show, AutoSize, %Title%
 
 OnExit("SaveCache")
@@ -108,7 +115,7 @@ return
 Add_htk:
 	ini["UhaczkaHotkeys"].Push("F2")
 	ln := ini["UhaczkaHotkeys"].Count()
-	Gui, Add, Hotkey, vTrigger_htk%ln% gTrigger_htk, F2
+	Gui, Add, Hotkey, xs vTrigger_htk%ln% gTrigger_htk
 	Gui, Show, AutoSize
 return
 
@@ -136,8 +143,8 @@ Uhaczka:
 	GuiControlGet, coords ,, TankerPos
 	GuiControlGet, UH_Htk ,, UH_hotkey
 	ControlFocus,, Tibia -
-	ControlSend,, {%UH_Htk% down}, Tibia -
 	SetControlDelay -1
+	ControlSend,, {%UH_Htk%}, Tibia -
 	ControlClick, %coords%, Tibia -,,Left
 return
 
@@ -159,7 +166,7 @@ WatchCursor:
 		GuiControl, Move, TankerPos, W300
 		SetTimer, WatchCursor, Off
 		ToolTip
-		WinActivate, %programName%
+		;WinActivate, %A_ScriptName%
 	}
 return
 
