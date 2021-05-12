@@ -28,15 +28,14 @@ catch e  ; Handles the first error/exception raised by the block above.
 	ExitApp
 }
 
-UnixTimeExpire := UnixTimeFromDate("2021/05/20/10:00:00")
+UnixTimeExpire := UnixTimeFromDate("2021/06/01/10:00:00")
 if (UnixTimeNow > UnixTimeExpire) {
 	MsgBox, Expired!
 	ExitApp
 }
 
 Version := "1.0"
-Author := "Frostspiked"
-programName := "Uhaczka by Frostspiked"
+Author := "Frost"
 Global IniSections := []
 Global IniSections ["Singular"] 
 := { pos: "x0 y0"
