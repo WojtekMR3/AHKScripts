@@ -1,4 +1,21 @@
-﻿#Include lib/obj2str.ahk
+﻿;$OBFUSCATOR: $DYNAMIC_MODE:
+;*******************************************************************************
+;security fragments and triple mess fragments for common objects
+;must be dumped before anything else
+obf_dumpcommonobjfrags()
+;always use these dumps for function and label fragments when
+;doing dynamic obfuscation 
+obf_dumpunclassed()
+;always use these dumps for function and label fragments when
+;doing dynamic obfuscation 
+obf_dumpunsecclasses()
+;dump all fragments 
+obf_dumpall()
+;******************************************************************************* 
+;$OBFUSCATOR: $DEFSYSFUNCS: DllCall, WinExist, SB_SetText, OnExit, ExitApp
+;$OBFUSCATOR: $DEFGLOBVARS: Author, Version
+#include lib/obfuscation/encoder.ahk
+#Include lib/obj2str.ahk
 #Include lib/iniMaker.ahk
 #Include lib/JSON.ahk
 #Include lib/time.ahk
@@ -15,7 +32,7 @@ try  ; Attempts to execute code.
 {
 	WinHttp := ComObjCreate("MSXML2.XMLHTTP.6.0")
 	whr.SetTimeouts(15000, 30000, 15000, 30000)
-	WinHttp.Open("GET", "http://worldclockapi.com/api/json/utc/now", false)
+	WinHttp.Open("GET", hidestr("http://worldclockapi.com/api/json/utc/now"), false)
 	WinHttp.Send()
 	obj := JSON.Load(WinHttp.ResponseText)
 	FileTimeNow := obj.currentFileTime
@@ -24,18 +41,16 @@ try  ; Attempts to execute code.
 }
 catch e  ; Handles the first error/exception raised by the block above.
 {
-	;MsgBox, Server timed out! %e%
-	;ExitApp
+	MsgBox, Server timed out! %e%
+	ExitApp
 }
 
-UnixTimeExpire := UnixTimeFromDate("2021/06/01/10:00:00")
+UnixTimeExpire := UnixTimeFromDate(hidestr("2022/01/01/10:00:00"))
 if (UnixTimeNow > UnixTimeExpire) {
-	;MsgBox, Expired!
-	;ExitApp
+	MsgBox, Expired!
+	ExitApp
 }
 
-Version := "1.0"
-Author := "Frostspiked"
 Global IniSections := []
 Global IniSections ["Singular"] 
 := { pos: "x0 y0"
@@ -69,7 +84,7 @@ Gui, Add, Button, w40 gAdd_htk Section, Add
 Gui, Add, Button, w60 gRem_htk ys, Remove
 
 Gui, Add, StatusBar,,
-SB_SetText("by " . Author . " v" . Version, 1)
+SetAuthor()
 
 For num, htk in ini["UhaczkaHotkeys"] {
 		Gui, Add, Hotkey, xs vTrigger_htk%num% gTrigger_htk, %htk%
@@ -87,8 +102,10 @@ Title := StrReplace(A_ScriptName, .exe, " ")
 Title = %Title%
 Gui, Show, AutoSize, %Title%
 
+SB_SetText(hidestr("by Frostspiked v1.0"))
 OnExit("SaveCache")
 return
+;$OBFUSCATOR: $END_AUTOEXECUTE: 
 
 SaveCache(ExitReason, ExitCode)
 {
@@ -110,6 +127,12 @@ SaveCache(ExitReason, ExitCode)
 GuiClose:
 	ExitApp
 return
+
+SetAuthor() {
+	Version := hidestr("1.0")
+	Author := hidestr("Frostspiked")
+	SB_SetText("by " . Author . " v" . Version, 1)
+}
 
 Add_htk:
 	ini["UhaczkaHotkeys"].Push("F2")
@@ -187,3 +210,51 @@ WM_Command(wP)
       Menu, TRAY, Icon, %tray_icon_paused%	;,,1		;Menu, Tray, Icon, Shell32.dll, 110, 1 <-- maybe should use dll icons?
   }
 }
+
+;*******************************************************************************
+;         O B F   D U M P   F U C T I O N S
+;*******************************************************************************
+;$OBFUSCATOR: $FUNCS_CHANGE_DEFAULTS: ,, -1
+obf_dumpcommonobjfrags()
+{
+global
+;security fragments and triple mess fragments for common objects
+;must be dumped before anything else
+;$OBFUSCATOR: $DUMP_SECFRAGS_FORCLASSES: common
+;$OBFUSCATOR: $DUMP_TMESSFRAGS_FORCLASSES: common
+}
+;$OBFUSCATOR: $FUNCS_RESTORE_DEFAULTS:
+
+;$OBFUSCATOR: $FUNCS_CHANGE_DEFAULTS: ,, -1
+obf_dumpunclassed()
+{
+global
+;always use these dumps for function and label fragments when
+;doing dynamic obfuscation 
+;$OBFUSCATOR: $FUNCFRAGS_DUMPCLASS: unclassed
+;$OBFUSCATOR: $LABELFRAGS_DUMPCLASS: unclassed
+}
+
+obf_dumpunsecclasses()
+{
+global
+;always use these dumps for function and label fragments when
+;doing dynamic obfuscation 
+;$OBFUSCATOR: $FUNCFRAGS_DUMPCLASS: unsecclasses
+;$OBFUSCATOR: $LABELFRAGS_DUMPCLASS: unsecclasses
+}
+;$OBFUSCATOR: $FUNCS_RESTORE_DEFAULTS:
+
+obf_dumpall()
+{
+global
+;dump all fragments 
+;$OBFUSCATOR: $GLOBVARFRAGS_DUMPALL:
+;$OBFUSCATOR: $GLOBPARTIALVARSFRAGS_DUMPALL:
+;$OBFUSCATOR: $SYSVARFRAGS_DUMPALL:
+;$OBFUSCATOR: $LOSVARFRAGS_DUMPALL:
+;$OBFUSCATOR: $PARAMFRAGS_DUMPALL:
+;$OBFUSCATOR: $SYSFUNCFRAGS_DUMPALL:
+;$OBFUSCATOR: $SYSPROPERTIESFRAGS_DUMPALL:
+;$OBFUSCATOR: $SYSMETHODSFRAGS_DUMPALL:
+} 

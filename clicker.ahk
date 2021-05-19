@@ -30,6 +30,7 @@ if !(WinActive("Tibia -")) {
 }
 
 sleep 35
+BlockInput On
 SendInput, {Shift down}
 sleep 1
 SetControlDelay -1
@@ -47,6 +48,10 @@ ControlClick, x911 y385, Tibia ,,Right
 ControlClick, x900 y321, Tibia ,,Right
 
 SendInput, {Shift up}
-KeyWait, Shift
+BlockInput, Off
+While(getKeyState("Shift")){
+    SendInput, {Shift up}
+    sleep 30
+}
 
 return
