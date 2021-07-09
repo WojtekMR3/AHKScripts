@@ -1,0 +1,128 @@
+
+
+	OBFUSCATOR TRANSLATION TABLE CREATION MESSAGES FILE
+	Date: 22:51 niedziela, 13 czerwca 2021
+
+	#FILE IN WHICH THE TRANSLATION COMMANDS WERE FOUND:
+	
+
+
+#FOUND: DEFSYSFUNCS funcname: SB_SetText
+    Created obfuscated name: SB_SetText
+
+#FOUND: DEFGLOBVARS funcname: Author
+    Created obfuscated name: fkk@#k@kff
+
+#FOUND: DEFGLOBVARS funcname: Version
+    Created obfuscated name: @fk#f@kf
+
+#FOUND: DEFFUNCS funcname: SaveCache
+    Created obfuscated name: kkk@fk@kff#k#kkk
+
+#FOUND: DEFPARAMS funcname: ExitReason
+    Created obfuscated name: @fkk#fff@kkk#k
+
+#FOUND: DEFPARAMS funcname: ExitCode
+    Created obfuscated name: #kkffkk##kk@kfkk
+
+#FOUND: DEFFUNCS funcname: SetAuthor
+    Created obfuscated name: k#k##fk@#f@kkf
+
+#FOUND: DEFLABELS funcname: Add_htk
+    Created obfuscated name: k##f@ffk@f#kffk#k@kkk#f@f@@kf@#k
+
+#FOUND: DEFLABELS funcname: Rem_htk
+    Created obfuscated name: kff@kk#k@kk@fkkfkf#kfk#kf@#f@kkk#fff
+
+#FOUND: DEFLABELS funcname: Trigger_htk
+    Created obfuscated name: k#@kkfkffk#kf#@ff@@kk#@kff@f
+
+#FOUND: DEFLABELS funcname: Uhaczka
+    Created obfuscated name: f#@ffffk#k#fkf#kfkfkf@fff#k#ffk@@kf#kf
+
+#FOUND: DEFLABELS funcname: SelectCoords
+    Created obfuscated name: kkkfk@@f#kkfk@@fkk@kk#kf@kfff@k@k@kffkfk
+
+#FOUND: DEFLABELS funcname: WatchCursor
+    Created obfuscated name: k@@kk#fffff##fkf#fk@#k#f@f@ff#kkff
+
+#FOUND: DEFFUNCS funcname: WM_Command
+    Created obfuscated name: k#@kkkk#kfkfkf
+
+#FOUND: DEFPARAMS funcname: wP
+    Created obfuscated name: kkf@f#ff@fkkf@#k
+
+#FOUND: DEFFUNCS funcname: WriteINI
+    Created obfuscated name: #f@kfff#kf@kkf
+
+#FOUND: DEFPARAMS funcname: Array2D
+    Created obfuscated name: ffk#kff#k@k#f@k@
+
+#FOUND: DEFPARAMS funcname: INI_File
+    Created obfuscated name: f@fkk#f@fkkkfk@f
+
+#FOUND: DEFFUNCS funcname: ReadINI
+    Created obfuscated name: ffkkkkkkf@kkfk
+
+#FOUND: DEFPARAMS funcname: INI_File
+    Created obfuscated name: k##kkf#fk##kkkf#
+
+#FOUND: DEFFUNCS funcname: hidestr
+    Created obfuscated name: k#ff@k#ff@k@@f@f
+
+#FOUND: DEFPARAMS funcname: thisstr
+    Created obfuscated name: #fkff@@ff#@kf#ff
+
+#FOUND: DEFFUNCS funcname: decode_hidestr
+    Created obfuscated name: k@kkk#@ff@#f
+
+#FOUND: DEFPARAMS funcname: startstr
+    Created obfuscated name: kfkk#ffkkf@kff@f
+
+#FOUND: DEFGLOBVARS funcname: hexdigits
+    Created obfuscated name: kkkkk@@f#f
+
+#FOUND: DEFLOSVARS funcname: newstr
+    Created obfuscated name: f@f@ffk#@kfkf#@fffkk
+
+#FOUND: DEFLOSVARS funcname: startstrlen
+    Created obfuscated name: k@k@ffkff@fk
+
+#FOUND: DEFLOSVARS funcname: charnum
+    Created obfuscated name: kfkkf@kk#kfk
+
+#FOUND: DEFLOSVARS funcname: hinibble
+    Created obfuscated name: kff#f@@f#ff@@f
+
+#FOUND: DEFLOSVARS funcname: lownibble
+    Created obfuscated name: f@#k#kf@k#ff#fkkfkk#kk
+
+#FOUND: DEFLOSVARS funcname: mybinary
+    Created obfuscated name: f@@f@kkff@f@@f@fkkkkff
+
+#FOUND: DEFFUNCS funcname: decode_hexshiftkeys
+    Created obfuscated name: fffk#kff#ffkfk@k
+
+#FOUND: DEFPARAMS funcname: startstr
+    Created obfuscated name: #ffkf@kkk#kf#k@f
+
+#FOUND: DEFGLOBVARS funcname: decodekey
+    Created obfuscated name: k#ff#f#k#kfk
+
+#FOUND: DEFGLOBVARS funcname: ishexchar
+    Created obfuscated name: @k@ff@f#k@
+
+#FOUND: DEFGLOBVARS funcname: useshiftkey
+    Created obfuscated name: fkkkffkkk#
+
+#FOUND: DEFFUNCS funcname: decode_shifthexdigit
+    Created obfuscated name: k@#k#fk#f@kfk#k@
+
+#FOUND: DEFPARAMS funcname: hexvalue
+    Created obfuscated name: k#k#ffkfkk@fkf#f
+
+#FOUND: DEFFUNCS funcname: fixescapes
+    Created obfuscated name: @ffff#@kkf@k
+
+#FOUND: DEFPARAMS funcname: forstr
+    Created obfuscated name: ff#ffkfkkfff#k@f
