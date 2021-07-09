@@ -1,6 +1,4 @@
-﻿
-
-#NoEnv
+﻿#NoEnv
 #SingleInstance off  ; Recommended for performance and compatibility with future AutoHotkey releases.
 ; #Warn  ; Enable warnings to assist with detecting common errors.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
@@ -33,9 +31,11 @@ OnMessage(0x111,"WM_COMMAND")
 
 Gui, Add, Text, yp+40, Coordinates
 
-Gui, Add, Text, xs xp+2 vTankerPos W50 Section
-Gui, Add, Button, w35 gSelectCoords ys, Pos
-
+; Create coords GUI
+Loop 9 {
+  Gui, Add, Edit, xs vTankerPos%A_Index% W75 Section, x0 y0
+  Gui, Add, Button, w35 gSelectCoords ys, Pos
+}
 
 Gui, Add, Text, x10 yp+40, UH Rune Hotkey in game ; The ym option starts a new column of controls.
 Gui, Add, Hotkey, vUH_hotkey, F1
