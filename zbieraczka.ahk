@@ -8,23 +8,22 @@ SetControlDelay -1
 Version := "1.0"
 Author := "Frostspiked"
 Global IniSections := []
-Global IniSections ["Singular"] 
-:= { pos: "x0 y0"
-	 , uh_htk: "f3"}
-Global IniSections ["UhaczkaHotkeys"] := {}
+Global IniSections ["Coordinates"] := {}
+Global IniSections ["Hotkeys"] := {}
 
 cachePth = %A_ScriptFullPath%:Stream:$DATA
 Global cachePath := cachePth
 Global ini := ReadINI(cachePath)
+Global Coordinates := []
 
-if (!ini.Singular.count()) {
-	ini.Singular := IniSections.Singular.Clone()
-	ini.Singular.uh_htk := IniSections.Singular.uh_htk
+If (!ini.Hotkeys.Count())
+{
+	ini["Hotkeys"] := IniSections["Hotkeys"].Clone()
 }
 
-If (!ini.UhaczkaHotkeys.Count())
+If (!ini.Coordinates.Count())
 {
-	ini["UhaczkaHotkeys"] := IniSections["UhaczkaHotkeys"].Clone()
+	ini["Coordinates"] := IniSections["Coordinates"].Clone()
 }
 
 OnMessage(0x111,"WM_COMMAND")
@@ -33,30 +32,27 @@ Gui, Add, Text, yp+40, Coordinates
 
 ; Create coords GUI
 Loop 9 {
-  Gui, Add, Edit, xs vPos%A_Index% W75 Section, x0 y0
+  Gui, Add, Edit, xs vPos%A_Index% gUpdateCoords W75 Section, x0 y0
   Gui, Add, Button, w35 vPosEvent%A_Index% gSelectCoords ys, Pos
 }
 
-Gui, Add, Text, x10 yp+40, UH Rune Hotkey in game ; The ym option starts a new column of controls.
-Gui, Add, Hotkey, vUH_hotkey, F1
-
-Gui, Add, Text, yp+40, AutoUH Hotkeys.
+Gui, Add, Text, xs yp+40, AutoLoot Hotkeys.
 Gui, Add, Button, w40 gAdd_htk Section, Add
 Gui, Add, Button, w60 gRem_htk ys, Remove
 
 Gui, Add, StatusBar,,
 SB_SetText("by " . Author . " v" . Version, 1)
 
-For num, htk in ini["UhaczkaHotkeys"] {
+; Load values from store
+For num, htk in ini["Hotkeys"] {
 		Gui, Add, Hotkey, xs vTrigger_htk%num% gTrigger_htk, %htk%
-		Hotkey, ~%htk%, Uhaczka, On
+		Hotkey, ~%htk%, Zbieraczka, On
 		savedHK%num% = %htk%
 }
 
-; Load values from store
-GuiControl, Text, TankerPos, % ini["Singular"].pos
-GuiControl, Move, TankerPos, W300
-GuiControl, Text, UH_hotkey, % ini["Singular"].uh_htk
+For num, coordPair in ini["Coordinates"] {
+  GuiControl, Text, Pos%num%, %coordPair%
+}
 
 ; Remove '.exe' from title
 Title := StrReplace(A_ScriptName, .exe, " ")
@@ -68,16 +64,17 @@ return
 
 SaveCache(ExitReason, ExitCode)
 {
-	GuiControlGet, TankerPos ,, TankerPos
-	IniSections["Singular"].pos := TankerPos
-	GuiControlGet, htk ,, UH_hotkey
-	IniSections["Singular"].uh_htk := htk
-
 	; Retrieve all hotkey binds.
-	Loop % ini["UhaczkaHotkeys"].Count() {
+	Loop % ini["Hotkeys"].Count() {
 		GuiControlGet, htk ,, Trigger_htk%A_Index%
 		; Create array and save it to db.
-		IniSections["UhaczkaHotkeys"].Push(htk)
+		IniSections["Hotkeys"].Push(htk)
+	}
+
+  Loop 9 {
+		GuiControlGet, OutputVar, , Pos%A_Index%
+		; Create array and save it to db.
+		IniSections["Coordinates"].Push(OutputVar)
 	}
 
 	WriteINI(IniSections, cachePath)
@@ -88,14 +85,14 @@ GuiClose:
 return
 
 Add_htk:
-	ini["UhaczkaHotkeys"].Push("F2")
-	ln := ini["UhaczkaHotkeys"].Count()
+	ini["Hotkeys"].Push("F2")
+	ln := ini["Hotkeys"].Count()
 	Gui, Add, Hotkey, xs vTrigger_htk%ln% gTrigger_htk
 	Gui, Show, AutoSize
 return
 
 Rem_htk:
-	ini["UhaczkaHotkeys"].Pop()
+	ini["Hotkeys"].Pop()
 	Reload
 return
 
@@ -104,23 +101,13 @@ Trigger_htk:
 		return
 	num := SubStr(A_GuiControl,A_GuiControl.length - 1)
 	If (savedHK%num%) { ;If a hotkey was already saved...
-		Hotkey,% savedHK%num%, Uhaczka, Off        ;     turn the old hotkey off
+		Hotkey,% savedHK%num%, Zbieraczka, Off        ;     turn the old hotkey off
 		savedHK := false                    ;     add the word 'OFF' to display in a message.
  	}
 	Keys := % %A_GuiControl%
-	Hotkey, ~%Keys%, Uhaczka, On
+	Hotkey, ~%Keys%, Zbieraczka, On
 	savedHK%num% := %A_GuiControl%
 	WinActivate, Program Manager ; lose focus
-return
-
-Uhaczka:
-	sleep 35 ; fix for low
-	GuiControlGet, coords ,, TankerPos
-	GuiControlGet, UH_Htk ,, UH_hotkey
-	ControlFocus,, Tibia -
-	SetControlDelay -1
-	ControlSend,, {%UH_Htk%}, Tibia -
-	ControlClick, %coords%, Tibia -,,Left
 return
 
 SelectCoords:
@@ -128,6 +115,38 @@ SelectCoords:
   Global numx := SubStr(A_GuiControl,A_GuiControl.length - 1)
 	SetTimer, WatchCursor, 20
 	return
+return
+
+UpdateCoords:
+  Loop 9 {
+    GuiControlGet, OutputVar, , Pos%A_Index%
+    Coordinates[A_Index] := OutputVar
+  }
+
+  For key, val in Coordinates
+      ;MsgBox % val
+
+return
+
+Zbieraczka:
+  if !(WinActive("Tibia -")) {
+    return
+  }
+  sleep 35
+  BlockInput On
+  SendInput, {Shift down}
+  sleep 1
+
+  Loop 9 {
+    ControlClick, Coordinates[A_Index], Tibia ,,Right
+  }
+
+  SendInput, {Shift up}
+  BlockInput, Off
+  While(getKeyState("Shift")){
+      SendInput, {Shift up}
+      sleep 30
+  }
 return
 
 WatchCursor:
@@ -140,7 +159,6 @@ WatchCursor:
 		MsgBox, , , %xpos% %ypos%, 0.3
 		BlockInput, Mouse
 		GuiControl, Text, Pos%numx%, x%xpos% y%ypos%
-		;GuiControl, Move, TankerPos, W300
 		SetTimer, WatchCursor, Off
 		ToolTip
 		;WinActivate, %A_ScriptName%
