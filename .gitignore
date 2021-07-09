@@ -1,9 +1,8 @@
 *
 
-!*/
-!lib/**
-!icons/**
-!bg/**
+**/lib/**
+**/icons/**
+
 !clicker.ahk
 !uhaczka.ahk
 !Uhaczka_Obfuscated.ahk
