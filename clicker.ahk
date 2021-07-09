@@ -35,7 +35,7 @@ SendInput, {Shift down}
 sleep 1
 SetControlDelay -1
 
-ControlClick, x963 y384, Tibia ,,Right
+ControlClick, x962 y384, Tibia ,,Right
 ControlClick, x967 y321, Tibia ,,Right
 ControlClick, x1031 y327, Tibia ,,Right
 
