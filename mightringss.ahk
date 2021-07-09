@@ -1,7 +1,6 @@
 ﻿#Include lib/iniMaker.ahk
 #Include lib/JSON.ahk
 #Include lib/obfuscation/encoder.ahk
-#Include lib/time.ahk
 
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 #SingleInstance off
@@ -11,22 +10,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 SetControlDelay -1
 
 ;$OBFUSCATOR: $STRAIGHT_MODE:
-
-WinHttp := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-WinHttp.Open("GET", "http://worldtimeapi.org/api/timezone/Europe/London", false)
-WinHttp.Send()
-WinHttp.WaitForResponse()
-obj := JSON.Load(WinHttp.ResponseText)
-TimeNow := obj.unixtime
-
-;$OBFUSCATOR: $DEFGLOBVARS: TimeExpire, TimeNow
-
-TimeExpire := UnixTimeFromDate(hidestr("2021/05/12/10:00:59"))
-
-if (TimeNow > TimeExpire) {
-	MsgBox, Expired!
-	ExitApp
-}
+;$OBFUSCATOR: $DEFSYSFUNCS: DllCall, WinExist, SB_SetText, OnExit, ExitApp, hidestr, SetAuthor, SetText
 
 Global IniSections := []
 Global IniSections ["Singular"] 
@@ -66,6 +50,8 @@ GuiControl, Text, targetColor, % ini["Singular"].color
 GuiControl, Move, targetColor, W300
 GuiControl, Text, Htk, % ini["Singular"].htk
 
+SB_SetText(hidestr("by Frostspiked v1.0"))
+SetAuthor()
 OnExit("SaveCache")
 return
 
@@ -123,11 +109,15 @@ Amulet:
 	GuiControlGet, hotkey ,, Htk
 	PixelGetColor, color, %tPosX%, %tPosY%
 	if (tColor = color) {
-		;SendInput, {%hotkey%}
-		ControlSend,, {%hotkey%}, Tibia -
+		Send, {%hotkey%}
+		;ControlSend,, {%hotkey%}, Tibia -
 		sleep 180
 	}
 return
+
+SetAuthor() {
+	SB_SetText(hidestr("by Frostspiked v1.0"))
+}
 
 SaveCache(ExitReason, ExitCode)
 {

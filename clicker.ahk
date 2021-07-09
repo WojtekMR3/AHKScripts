@@ -35,17 +35,18 @@ SendInput, {Shift down}
 sleep 1
 SetControlDelay -1
 
-ControlClick, x963 y384, Tibia ,,Right
-ControlClick, x967 y321, Tibia ,,Right
-ControlClick, x1031 y327, Tibia ,,Right
 
-ControlClick, x1019 y387, Tibia ,,Right
-ControlClick, x1025 y455, Tibia ,,Right
-ControlClick, x959 y447, Tibia ,,Right
+ControlClick, x1364 y490, Tibia ,,Right
+ControlClick, x1364 y400, Tibia ,,Right
+ControlClick, x1470 y400, Tibia ,,Right
 
-ControlClick, x913 y455, Tibia ,,Right
-ControlClick, x911 y385, Tibia ,,Right
-ControlClick, x900 y321, Tibia ,,Right
+ControlClick, x1470 y500, Tibia ,,Right
+ControlClick, x1470 y590, Tibia ,,Right
+ControlClick, x1370 y590, Tibia ,,Right
+
+ControlClick, x1290 y590, Tibia ,,Right
+ControlClick, x1290 y500, Tibia ,,Right
+ControlClick, x1290 y400, Tibia ,,Right
 
 SendInput, {Shift up}
 BlockInput, Off
