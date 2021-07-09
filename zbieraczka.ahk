@@ -1,8 +1,4 @@
-﻿#Include lib/obj2str.ahk
-#Include lib/iniMaker.ahk
-#Include lib/JSON.ahk
-#Include lib/time.ahk
-#Include lib/timeConverter.ahk
+﻿
 
 #NoEnv
 #SingleInstance off  ; Recommended for performance and compatibility with future AutoHotkey releases.
@@ -10,29 +6,6 @@
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 SetControlDelay -1
-
-try  ; Attempts to execute code.
-{
-	WinHttp := ComObjCreate("MSXML2.XMLHTTP.6.0")
-	whr.SetTimeouts(15000, 30000, 15000, 30000)
-	WinHttp.Open("GET", "http://worldclockapi.com/api/json/utc/now", false)
-	WinHttp.Send()
-	obj := JSON.Load(WinHttp.ResponseText)
-	FileTimeNow := obj.currentFileTime
-	DateTimeNow := JEE_DateFileTimeToAhk(FileTimeNow)
-	UnixTimeNow := UnixTimeFromDate(DateTimeNow)
-}
-catch e  ; Handles the first error/exception raised by the block above.
-{
-	;MsgBox, Server timed out! %e%
-	;ExitApp
-}
-
-UnixTimeExpire := UnixTimeFromDate("2021/06/01/10:00:00")
-if (UnixTimeNow > UnixTimeExpire) {
-	;MsgBox, Expired!
-	;ExitApp
-}
 
 Version := "1.0"
 Author := "Frostspiked"
@@ -58,8 +31,11 @@ If (!ini.UhaczkaHotkeys.Count())
 
 OnMessage(0x111,"WM_COMMAND")
 
-Gui, Add, Button, w133 gSelectCoords, Select target position
+Gui, Add, Text, yp+40, Coordinates
+
 Gui, Add, Text, xs xp+2 vTankerPos W50 Section
+Gui, Add, Button, w35 gSelectCoords ys, Pos
+
 
 Gui, Add, Text, x10 yp+40, UH Rune Hotkey in game ; The ym option starts a new column of controls.
 Gui, Add, Hotkey, vUH_hotkey, F1
@@ -186,4 +162,33 @@ WM_Command(wP)
     If A_IsPaused
       Menu, TRAY, Icon, %tray_icon_paused%	;,,1		;Menu, Tray, Icon, Shell32.dll, 110, 1 <-- maybe should use dll icons?
   }
+}
+
+
+; INI MAKER
+;-------------------------------------------------------------------------------
+WriteINI(ByRef Array2D, INI_File) { ; write 2D-array to INI-file
+;-------------------------------------------------------------------------------
+    for SectionName, Entry in Array2D {
+        Pairs := ""
+        for Key, Value in Entry
+            Pairs .= Key "=" Value "`n"
+        IniWrite, %Pairs%, %INI_File%, %SectionName%
+    }
+}
+
+
+
+;-------------------------------------------------------------------------------
+ReadINI(INI_File) { ; return 2D-array from INI-file
+;-------------------------------------------------------------------------------
+    Result := []
+    IniRead, SectionNames, %INI_File%
+    for each, Section in StrSplit(SectionNames, "`n") {
+        IniRead, OutputVar_Section, %INI_File%, %Section%
+        for each, Haystack in StrSplit(OutputVar_Section, "`n")
+            RegExMatch(Haystack, "(.*?)=(.*)", $)
+            , Result[Section, $1] := $2
+    }
+    return Result
 }
