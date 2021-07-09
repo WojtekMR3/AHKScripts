@@ -33,8 +33,8 @@ Gui, Add, Text, yp+40, Coordinates
 
 ; Create coords GUI
 Loop 9 {
-  Gui, Add, Edit, xs vTankerPos%A_Index% W75 Section, x0 y0
-  Gui, Add, Button, w35 gSelectCoords ys, Pos
+  Gui, Add, Edit, xs vPos%A_Index% W75 Section, x0 y0
+  Gui, Add, Button, w35 vPosEvent%A_Index% gSelectCoords ys, Pos
 }
 
 Gui, Add, Text, x10 yp+40, UH Rune Hotkey in game ; The ym option starts a new column of controls.
@@ -125,20 +125,22 @@ return
 
 SelectCoords:
 	WinActivate, Tibia 
+  Global numx := SubStr(A_GuiControl,A_GuiControl.length - 1)
 	SetTimer, WatchCursor, 20
 	return
 return
 
 WatchCursor:
 	CoordMode, Mouse, Relative
+  
 	MouseGetPos, xpos, ypos
 	ToolTip, `Select position`n`x: %xpos% y: %ypos%`
 	
 	if (GetKeyState("LButton")) {
 		MsgBox, , , %xpos% %ypos%, 0.3
 		BlockInput, Mouse
-		GuiControl, Text, TankerPos, x%xpos% y%ypos%
-		GuiControl, Move, TankerPos, W300
+		GuiControl, Text, Pos%numx%, x%xpos% y%ypos%
+		;GuiControl, Move, TankerPos, W300
 		SetTimer, WatchCursor, Off
 		ToolTip
 		;WinActivate, %A_ScriptName%
