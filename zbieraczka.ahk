@@ -47,7 +47,11 @@ SB_SetText("by " . Author . " v" . Version, 1)
 For num, htk in ini["Hotkeys"] {
 		Gui, Add, Hotkey, xs vTrigger_htk%num% gTrigger_htk, %htk%
 		Hotkey, ~%htk%, Zbieraczka, On
-		savedHK%num% = %htk%
+	  ;savedHK%num% := htk
+    ini["Hotkeys"][num] := htk
+    ;hkey := savedHK%num%
+    ;MsgBox, initial saved htk is: savedHK%num%
+    ;SetZbieraczkaHotkey(num, htk)
 }
 
 For num, coordPair in ini["Coordinates"] {
@@ -96,19 +100,61 @@ Rem_htk:
 	Reload
 return
 
+; Only triggers on hotkey change, if htk is same it doesn't trigger.
 Trigger_htk:
-	If %A_GuiControl%  in +,^,!,+^,+!,^!,+^!            ;If the hotkey contains only modifiers, return to wait for a key.
+	If %A_GuiControl%  in +,!,^,+^,+!,^!,+^!            ;If the hotkey contains only modifiers, return to wait for a key.
 		return
 	num := SubStr(A_GuiControl,A_GuiControl.length - 1)
-	If (savedHK%num%) { ;If a hotkey was already saved...
-		Hotkey,% savedHK%num%, Zbieraczka, Off        ;     turn the old hotkey off
-		savedHK := false                    ;     add the word 'OFF' to display in a message.
- 	}
-	Keys := % %A_GuiControl%
-	Hotkey, ~%Keys%, Zbieraczka, On
-	savedHK%num% := %A_GuiControl%
-	WinActivate, Program Manager ; lose focus
+  Key := % %A_GuiControl%
+  SetZbieraczkaHotkey(num, Key)
 return
+
+#If ctrl := HotkeyCtrlHasFocus()
+  *Space::
+    num := SubStr(ctrl,ctrl.length - 1)
+    Key := SubStr(A_ThisHotkey,2)
+    GuiControl,,%ctrl%, % Key
+    SetZbieraczkaHotkey(num, Key)
+  return
+#If
+
+HotkeyCtrlHasFocus() {
+  ;MsgBox spacetriggered
+ GuiControlGet, ctrl, Focus       ;ClassNN
+ If InStr(ctrl,"hotkey") {
+  GuiControlGet, ctrl, FocusV     ;Associated variable
+  Return, ctrl
+ }
+}
+
+SetZbieraczkaHotkey(num, key) {
+  rndaf := ini["Hotkeys"][1]
+  MsgBox, rndaf is: %rndaf%
+    ; Turn off old hotkey
+  ln := ini["Hotkeys"].Count()
+  Loop % ln {
+    if (Trigger_htk%num% = ini["Hotkeys"][A_Index]) {
+      ;MsgBox Trigger_htk%num%
+      dup := A_Index
+      Loop,6 {
+        GuiControl,% "Disable" b:=!b, Trigger_htk%dup%   ;Flash the original hotkey to alert the user.
+        Sleep,120
+      }
+      GuiControl,,Trigger_htk%num%,% Trigger_htk%num% :=""       ;Delete the hotkey and clear the control.
+      break
+    }
+  }
+
+	If (ini["Hotkeys"][num]) { ;If a hotkey was already saved...
+    oldHtk := ini["Hotkeys"][num]
+		Hotkey, %oldHtk%, Zbieraczka, Off        ;     turn the old hotkey off
+		ini["Hotkeys"][num] := false        ;     add the word 'OFF' to display in a message.
+ 	}
+    Hotkey, ~%Key%, Zbieraczka, On
+    ini["Hotkeys"][num] := key
+    ;savedHK%num% := key
+    WinActivate, Program Manager ; lose focus
+}
 
 SelectCoords:
 	WinActivate, Tibia 
@@ -129,6 +175,7 @@ UpdateCoords:
 return
 
 Zbieraczka:
+  MsgBox, , ,Zbieraczka Triggered, 0.5
   if !(WinActive("Tibia -")) {
     return
   }
