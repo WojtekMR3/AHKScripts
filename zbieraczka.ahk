@@ -5,6 +5,9 @@ SendMode Input  ; Recommended for new scripts due to its superior speed and reli
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 SetControlDelay -1
 
+SetWorkingDir %A_ScriptDir%
+#Include obj2str.ahk
+
 Version := "1.0"
 Author := "Frostspiked"
 Global IniSections := []
@@ -128,8 +131,8 @@ HotkeyCtrlHasFocus() {
 }
 
 SetZbieraczkaHotkey(num, key) {
-  rndaf := ini["Hotkeys"][1]
-  MsgBox, rndaf is: %rndaf%
+  String := Obj2Str(ini["Hotkeys"])     
+  MsgBox % String 
     ; Turn off old hotkey
   ln := ini["Hotkeys"].Count()
   Loop % ln {
@@ -150,10 +153,13 @@ SetZbieraczkaHotkey(num, key) {
 		Hotkey, %oldHtk%, Zbieraczka, Off        ;     turn the old hotkey off
 		ini["Hotkeys"][num] := false        ;     add the word 'OFF' to display in a message.
  	}
+
+  if (!dup) {
     Hotkey, ~%Key%, Zbieraczka, On
     ini["Hotkeys"][num] := key
     ;savedHK%num% := key
     WinActivate, Program Manager ; lose focus
+  }
 }
 
 SelectCoords:
