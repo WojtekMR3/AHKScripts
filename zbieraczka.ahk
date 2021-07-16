@@ -114,6 +114,7 @@ return
 
 #If ctrl := HotkeyCtrlHasFocus()
   *Space::
+  *Tab::
     num := SubStr(ctrl,ctrl.length - 1)
     Key := SubStr(A_ThisHotkey,2)
     GuiControl,,%ctrl%, % Key
@@ -131,12 +132,18 @@ HotkeyCtrlHasFocus() {
 }
 
 SetZbieraczkaHotkey(num, key) {
+  if (key == "") {
+    ;GuiControl,,Trigger_htk%num%, % ini["Hotkeys"][num]
+    ;MsgBox empty
+    ;return
+  }
   String := Obj2Str(ini["Hotkeys"])     
-  MsgBox % String 
+  MsgBox % key 
     ; Turn off old hotkey
   ln := ini["Hotkeys"].Count()
+  thishtk := Trigger_htk%num%
   Loop % ln {
-    if (Trigger_htk%num% = ini["Hotkeys"][A_Index]) {
+    if (key = ini["Hotkeys"][A_Index]) {
       ;MsgBox Trigger_htk%num%
       dup := A_Index
       Loop,6 {
