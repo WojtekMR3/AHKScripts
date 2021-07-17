@@ -113,6 +113,8 @@ Trigger_htk:
 return
 
 #If ctrl := HotkeyCtrlHasFocus()
+  *Delete::
+  *Escape::
   *Space::
   *Tab::
     num := SubStr(ctrl,ctrl.length - 1)
@@ -123,7 +125,6 @@ return
 #If
 
 HotkeyCtrlHasFocus() {
-  ;MsgBox spacetriggered
  GuiControlGet, ctrl, Focus       ;ClassNN
  If InStr(ctrl,"hotkey") {
   GuiControlGet, ctrl, FocusV     ;Associated variable
@@ -132,20 +133,14 @@ HotkeyCtrlHasFocus() {
 }
 
 SetZbieraczkaHotkey(num, key) {
-  if (key == "") {
-    ;GuiControl,,Trigger_htk%num%, % ini["Hotkeys"][num]
-    ;MsgBox empty
-    ;return
-  }
-  String := Obj2Str(ini["Hotkeys"])     
-  MsgBox % key 
-    ; Turn off old hotkey
   ln := ini["Hotkeys"].Count()
-  thishtk := Trigger_htk%num%
   Loop % ln {
     if (key = ini["Hotkeys"][A_Index]) {
-      ;MsgBox Trigger_htk%num%
       dup := A_Index
+      ; If duplicate hotkey is blank, do not alert it to user
+      if (Trigger_htk%dup% == "") {
+        break
+      }
       Loop,6 {
         GuiControl,% "Disable" b:=!b, Trigger_htk%dup%   ;Flash the original hotkey to alert the user.
         Sleep,120
@@ -190,7 +185,7 @@ return
 Zbieraczka:
   MsgBox, , ,Zbieraczka Triggered, 0.5
   if !(WinActive("Tibia -")) {
-    return
+    ;return
   }
   sleep 35
   BlockInput On
