@@ -50,15 +50,12 @@ SB_SetText("by " . Author . " v" . Version, 1)
 For num, htk in ini["Hotkeys"] {
 		Gui, Add, Hotkey, xs vTrigger_htk%num% gTrigger_htk, %htk%
 		Hotkey, ~%htk%, Zbieraczka, On
-	  ;savedHK%num% := htk
     ini["Hotkeys"][num] := htk
-    ;hkey := savedHK%num%
-    ;MsgBox, initial saved htk is: savedHK%num%
-    ;SetZbieraczkaHotkey(num, htk)
 }
 
 For num, coordPair in ini["Coordinates"] {
   GuiControl, Text, Pos%num%, %coordPair%
+  Coordinates[num] := coordPair
 }
 
 ; Remove '.exe' from title
@@ -117,8 +114,15 @@ return
   *Escape::
   *Space::
   *Tab::
+     modifier := ""
+    If GetKeyState("Shift","P")
+      modifier .= "+"
+    If GetKeyState("Ctrl","P")
+      modifier .= "^"
+    If GetKeyState("Alt","P")
+      modifier .= "!"
     num := SubStr(ctrl,ctrl.length - 1)
-    Key := SubStr(A_ThisHotkey,2)
+    Key := modifier SubStr(A_ThisHotkey,2)
     GuiControl,,%ctrl%, % Key
     SetZbieraczkaHotkey(num, Key)
   return
@@ -183,9 +187,10 @@ UpdateCoords:
 return
 
 Zbieraczka:
-  MsgBox, , ,Zbieraczka Triggered, 0.5
+  MsgBox, , , Zbieracz, 0.5
+  WinActivate, Program Manager
   if !(WinActive("Tibia -")) {
-    ;return
+    return
   }
   sleep 35
   BlockInput On
@@ -193,7 +198,8 @@ Zbieraczka:
   sleep 1
 
   Loop 9 {
-    ControlClick, Coordinates[A_Index], Tibia ,,Right
+    coords := Coordinates[A_Index]
+    ControlClick, %coords%, Tibia ,,Right
   }
 
   SendInput, {Shift up}
