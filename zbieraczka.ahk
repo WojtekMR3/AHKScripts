@@ -6,7 +6,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 SetControlDelay -1
 
 SetWorkingDir %A_ScriptDir%
-#Include obj2str.ahk
+;#Include obj2str.ahk
 
 Version := "1.0"
 Author := "Frostspiked"
@@ -61,6 +61,7 @@ For num, coordPair in ini["Coordinates"] {
 ; Remove '.exe' from title
 Title := StrReplace(A_ScriptName, .exe, " ")
 Title = %Title%
+
 Gui, Show, AutoSize, %Title%
 
 OnExit("SaveCache")
@@ -187,8 +188,8 @@ UpdateCoords:
 return
 
 Zbieraczka:
-  MsgBox, , , Zbieracz, 0.5
-  WinActivate, Program Manager
+  ;MsgBox, , , Zbieracz, 0.5
+  ;WinActivate, Program Manager
   if !(WinActive("Tibia -")) {
     return
   }
