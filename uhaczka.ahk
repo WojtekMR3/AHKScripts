@@ -4,6 +4,8 @@
 #Include lib/time.ahk
 #Include lib/timeConverter.ahk
 
+#InstallKeybdHook
+
 #NoEnv
 #SingleInstance off  ; Recommended for performance and compatibility with future AutoHotkey releases.
 ; #Warn  ; Enable warnings to assist with detecting common errors.
@@ -138,13 +140,47 @@ Trigger_htk:
 return
 
 Uhaczka:
+  ;MsgBox, , , uhaczka, 0.3
 	sleep 35 ; fix for low
 	GuiControlGet, coords ,, TankerPos
 	GuiControlGet, UH_Htk ,, UH_hotkey
 	ControlFocus,, Tibia -
 	SetControlDelay -1
-	ControlSend,, {%UH_Htk%}, Tibia -
-	ControlClick, %coords%, Tibia -,,Left
+  BlockInput On
+  
+  ;MsgBox, , , %kstate%, 0.3
+  If GetKeyState("Shift") {
+    
+    ;SendInput, {Blind}{Shift Up}
+    ;MsgBox, shift
+  }
+  key := StrReplace(A_ThisHotkey, "+", "")
+  key := StrReplace(key, "~", "")
+  ;MsgBox, %key%
+  While(getKeyState("Shift","P")){
+    nkey := StrReplace(A_ThisHotkey, "+", "")
+    nkey := StrReplace(key, "~", "")
+    ;MsgBox, , , key is: %key%, 0.7
+    ;MsgBox, , , nkey is: %nkey%, 0.7
+    ;if (key != nkey) {
+      ;MsgBox, breaking
+      ;break
+    ;}
+    If GetKeyState(key) {
+    ;SendInput, {Blind}{Shift Up}
+    ControlSend,, {%UH_Htk%}, Tibia -
+	  ControlClick, %coords%, Tibia -,,Left
+    MsgBox, , , uh, 0.3
+    }
+    sleep 25
+  }
+
+  
+  ;SendInput, {Blind}{Shift Down}
+  kstate := GetKeyState("Shift")
+  ;KeyWait, Shift
+
+  BlockInput Off
 return
 
 SelectCoords:
