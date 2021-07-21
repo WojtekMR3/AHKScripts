@@ -159,9 +159,9 @@ Uhaczka:
     }
   }
 
-  SendInput, {%LMod% Down}
-  SendInput, {%UH_Htk%}
-  SendInput, {%LMod% Up}
+  ;SendInput, {%LMod% Down}
+  SendInput, {%LMod% Down}{%UH_Htk%}{%LMod% Up}
+  ;SendInput, {%LMod% Up}
   Sleep 1
   ControlClick, %coords%, Tibia -,,Left
 
