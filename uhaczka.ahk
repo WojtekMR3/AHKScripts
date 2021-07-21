@@ -5,6 +5,8 @@
 #Include lib/timeConverter.ahk
 
 #InstallKeybdHook
+#UseHook On
+#KeyHistory 100
 
 #NoEnv
 #SingleInstance off  ; Recommended for performance and compatibility with future AutoHotkey releases.
@@ -47,6 +49,7 @@ Global IniSections ["UhaczkaHotkeys"] := {}
 cachePth = %A_ScriptFullPath%:Stream:$DATA
 Global cachePath := cachePth
 Global ini := ReadINI(cachePath)
+Global Modifiers := {"Alt": "!", "Ctrl": "^", "Shift": "+"}
 
 if (!ini.Singular.count()) {
 	ini.Singular := IniSections.Singular.Clone()
@@ -147,38 +150,20 @@ Uhaczka:
 	ControlFocus,, Tibia -
 	SetControlDelay -1
   BlockInput On
-  
-  ;MsgBox, , , %kstate%, 0.3
-  If GetKeyState("Shift") {
-    
-    ;SendInput, {Blind}{Shift Up}
-    ;MsgBox, shift
-  }
-  key := StrReplace(A_ThisHotkey, "+", "")
-  key := StrReplace(key, "~", "")
-  ;MsgBox, %key%
-  While(getKeyState("Shift","P")){
-    nkey := StrReplace(A_ThisHotkey, "+", "")
-    nkey := StrReplace(key, "~", "")
-    ;MsgBox, , , key is: %key%, 0.7
-    ;MsgBox, , , nkey is: %nkey%, 0.7
-    ;if (key != nkey) {
-      ;MsgBox, breaking
-      ;break
-    ;}
-    If GetKeyState(key) {
-    ;SendInput, {Blind}{Shift Up}
-    ControlSend,, {%UH_Htk%}, Tibia -
-	  ControlClick, %coords%, Tibia -,,Left
-    MsgBox, , , uh, 0.3
+
+  For LiteralMod, Mod in Modifiers {
+    if (InStr(UH_Htk, Mod)) {
+      UH_Htk := StrReplace(UH_Htk, Mod, "")
+      LMod := LiteralMod
+      break
     }
-    sleep 25
   }
 
-  
-  ;SendInput, {Blind}{Shift Down}
-  kstate := GetKeyState("Shift")
-  ;KeyWait, Shift
+  SendInput, {%LMod% Down}
+  SendInput, {%UH_Htk%}
+  SendInput, {%LMod% Up}
+  Sleep 1
+  ControlClick, %coords%, Tibia -,,Left
 
   BlockInput Off
 return
