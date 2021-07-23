@@ -7,8 +7,11 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
 global cycles := 12
 global g := new Graphics.TextRenderer
-g.Draw("Status: Active", "c:Off", "s:18pt f:(Avenir LT Pro 55 Roman) c:00A900 x:1375 y:200")
+;g.Draw("Status: Active", "c:Off", "s:18pt f:(Avenir LT Pro 55 Roman) c:00A900 x:1375 y:200")
+;RenderText("✿", "time:8s")
+g.Draw(, "c:33FAB4  x:900 y:500  w:1px h:1px time: 2s r: 50%")
 g.Render()
+
 return
 
 f5::
