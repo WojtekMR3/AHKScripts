@@ -4,10 +4,20 @@
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 SetControlDelay -1
+SetDefaultMouseSpeed, 0
+SetMouseDelay, -1
 
 SetWorkingDir %A_ScriptDir%
-;#Include obj2str.ahk
 
+if not A_IsAdmin
+{
+    try
+    {
+      ;Run *RunAs "%A_ScriptFullPath%"  ; Requires v1.0.92.01+
+    }
+    ;ExitApp
+}
+;#Include obj2str.ahk
 Version := "1.0"
 Author := "Frostspiked"
 Global IniSections := []
@@ -38,6 +48,10 @@ Loop 9 {
   Gui, Add, Edit, xs vPos%A_Index% gUpdateCoords W75 Section, x0 y0
   Gui, Add, Button, w35 vPosEvent%A_Index% gSelectCoords ys, Pos
 }
+
+;Gui, Add, Text, vPos0 gAutoCoords, AutoLoot Hotkeys.
+Gui, Add, Edit, xs vPos0 gAutoCoords W75 Section hide, x0 y0
+Gui, Add, Button, w40 vPosEvent0 gSelectCoords Section, AutoCoords
 
 Gui, Add, Text, xs yp+40, AutoLoot Hotkeys.
 Gui, Add, Button, w40 gAdd_htk Section, Add
@@ -172,8 +186,8 @@ SetZbieraczkaHotkey(num, key) {
 SelectCoords:
 	WinActivate, Tibia 
   Global numx := SubStr(A_GuiControl,A_GuiControl.length - 1)
+  ;Global numx := A_GuiControl
 	SetTimer, WatchCursor, 20
-	return
 return
 
 UpdateCoords:
@@ -188,27 +202,43 @@ UpdateCoords:
 return
 
 Zbieraczka:
-  ;MsgBox, , , Zbieracz, 0.5
+  ;MsgBox, , , Zbieracz, 0.3
   ;WinActivate, Program Manager
   if !(WinActive("Tibia -")) {
     return
   }
-  sleep 35
-  BlockInput On
-  SendInput, {Shift down}
-  sleep 1
 
+  BlockInput, On
+  MouseGetPos, xpos, ypos
+
+  SendInput {Shift Down}
+  ;/*
+  Loop 9 {
+    coords := Coordinates[A_Index]
+    coords := StrReplace(coords, "x", "")
+    coords := StrReplace(coords, "y", "")
+    carray := StrSplit(coords, A_Space)
+    cx := carray[1]
+    yx := carray[2]
+    ;Shift + Right
+    ;SendInput +{Click %cx% %yx% Right}
+    
+    SendInput {Click %cx% %yx% Right}
+    ;SendInput {Shift Down}{Click %cx% %yx% Right}{Shift Up}
+    
+  }
+  ;*/
+  
+  /*
   Loop 9 {
     coords := Coordinates[A_Index]
     ControlClick, %coords%, Tibia ,,Right
   }
+  */
+  SendInput {Shift Up}
 
-  SendInput, {Shift up}
+  SendInput {Click %xpos% %ypos% 0}
   BlockInput, Off
-  While(getKeyState("Shift")){
-      SendInput, {Shift up}
-      sleep 30
-  }
 return
 
 WatchCursor:
@@ -226,6 +256,57 @@ WatchCursor:
 		;WinActivate, %A_ScriptName%
 	}
 return
+
+AutoCoords:
+	GuiControlGet, center, , Pos0
+  coords := center
+  coords := StrReplace(coords, "x", "")
+  coords := StrReplace(coords, "y", "")
+  carray := StrSplit(coords, A_Space)
+  x0 := carray[1]
+  y0 := carray[2]
+  1sqm := y0-28
+  1sqm := Round(1sqm/5.5)
+  ;MsgBox, , ,c is: %1sqm%, 0.8
+  x1 := x0
+  y1 := y0
+
+  x2 := x0
+  y2 := y0-1sqm
+
+  x3 := x0+1sqm
+  y3 := y0-1sqm
+
+  x4 := x0+1sqm
+  y4 := y0
+
+  x5 := x0+1sqm
+  y5 := y0+1sqm
+
+  x6 := x0
+  y6 := y0+1sqm
+
+  x7 := x0-1sqm
+  y7 := y0+1sqm
+
+  x8 := x0-1sqm
+  y8 := y0
+
+  x9 := x0-1sqm
+  y9 := y0-1sqm
+
+  GuiControl, Text, Pos1, x%x1% y%y1%
+  GuiControl, Text, Pos2, x%x2% y%y2%
+  GuiControl, Text, Pos3, x%x3% y%y3%
+
+  GuiControl, Text, Pos4, x%x4% y%y4%
+  GuiControl, Text, Pos5, x%x5% y%y5%
+  GuiControl, Text, Pos6, x%x6% y%y6%
+
+  GuiControl, Text, Pos7, x%x7% y%y7%
+  GuiControl, Text, Pos8, x%x8% y%y8%
+  GuiControl, Text, Pos9, x%x9% y%y9%
+Return
 
 WM_Command(wP)
 {
