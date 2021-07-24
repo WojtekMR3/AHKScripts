@@ -119,6 +119,7 @@ Uhaczka:
 	SetControlDelay -1
   BlockInput On
 
+  LMod := false
   For LiteralMod, Mod in Modifiers {
     if (InStr(UH_Htk, Mod)) {
       UH_Htk := StrReplace(UH_Htk, Mod, "")
@@ -128,7 +129,12 @@ Uhaczka:
   }
 
   ;SendInput, {%LMod% Down}
-  SendInput, {%LMod% Down}{%UH_Htk%}{%LMod% Up}
+  if (LMod) {
+    SendInput, {%LMod% Down}{%UH_Htk%}{%LMod% Up}
+  } else {
+    SendInput, {%UH_Htk%}
+  }
+  
   ;SendInput, {%LMod% Up}
   Sleep 1
   ControlClick, %coords%, Tibia -,,Left
