@@ -212,7 +212,9 @@ Zbieraczka:
   MouseGetPos, xpos, ypos
 
   SendInput {Shift Down}
-  ;/*
+  ; If sleep is less than 1, theres high chance tibia wont detect shift keypress before mouse clicks.
+  ;Sleep 5
+ ;/*
   Loop 9 {
     coords := Coordinates[A_Index]
     coords := StrReplace(coords, "x", "")
@@ -223,7 +225,8 @@ Zbieraczka:
     ;Shift + Right
     ;SendInput +{Click %cx% %yx% Right}
     
-    SendInput {Click %cx% %yx% Right}
+    ;SendInput {Click %cx% %yx% Right}
+    ControlClick, x%cx% y%yx%, Tibia ,,Right
     ;SendInput {Shift Down}{Click %cx% %yx% Right}{Shift Up}
     
   }
@@ -235,6 +238,7 @@ Zbieraczka:
     ControlClick, %coords%, Tibia ,,Right
   }
   */
+  ;Sleep 5
   SendInput {Shift Up}
 
   SendInput {Click %xpos% %ypos% 0}
