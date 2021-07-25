@@ -303,6 +303,54 @@ AutoCoords:
   GuiControl, Text, Pos9, x%x9% y%y9%
 Return
 
+/*
+GAME_TITLE := "Tibia"
+X_OFFSET := 50
+Y_OFFSET := 50
+
+
+hCircle1 := makeCircle(0x00FF00, 50, 2, 200)
+
+
+;SetTimer MoveCircle, 100
+Return
+
+
+MoveCircle:
+	if (hGame := WinActive(GAME_TITLE))
+	{
+		WinGetPos x, y, , , % "ahk_id " hGame
+		Gui %hCircle%: Show, % Format("NoActivate x{} y{}", x + X_OFFSET, y + Y_OFFSET)
+	}
+	else
+		Gui %hCircle%: Hide
+Return
+*/
+makeCircle(color, r := 300, thickness := 10, transparency := 254) {
+	static HWND := MakeGui()
+
+	; https://autohotkey.com/board/topic/7377-create-a-transparent-circle-in-window-w-winset-region/
+	outer := DllCall("CreateEllipticRgn", "Int", 0, "Int", 0, "Int", r, "Int", r)
+	DllCall("SetWindowRgn", "UInt", HWND, "UInt", outer, "UInt", true)
+
+	;Gui %HWND%:Color, % color
+	;Gui %HWND%:Show, xCenter yCenter w%r% h%r% NoActivate
+	;WinSet Transparent, % transparency, % "ahk_id " HWND
+
+	return HWND
+}
+
+MakeGui() {
+	;Gui New, +E0x20 +AlwaysOnTop +ToolWindow -Caption +Hwndhwnd
+	return hwnd
+}
+
+/*
+F12::
+ Gui %hCircle1%: Hide
+Return
+*/
+
 WM_Command(wP)
 {
   Global tray_icon_go, tray_icon_paused
