@@ -4,6 +4,7 @@
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 SetControlDelay -1
+SetKeyDelay, 0
 SetDefaultMouseSpeed, 0
 SetMouseDelay, -1
 
@@ -213,7 +214,7 @@ Zbieraczka:
 
   SendInput {Shift Down}
   ; If sleep is less than 1, theres high chance tibia wont detect shift keypress before mouse clicks.
-  ;Sleep 5
+  Sleep 5
   Loop 9 {
     coords := Coordinates[A_Index]
     coords := StrReplace(coords, "x", "")
@@ -224,15 +225,14 @@ Zbieraczka:
     ;Shift + Right
     ;SendInput +{Click %cx% %yx% Right}
     
-    ;SendInput {Click %cx% %yx% Right}
+    ;Send {Click %cx% %yx% Right}
     ControlClick, x%cx% y%yx%, Tibia ,,Right
-    ;SendInput {Shift Down}{Click %cx% %yx% Right}{Shift Up}
     
   }
-  ;Sleep 5
+  Sleep 5
   SendInput {Shift Up}
 
-  SendInput {Click %xpos% %ypos% 0}
+  Send {Click %xpos% %ypos% 0}
   BlockInput, Off
 return
 
