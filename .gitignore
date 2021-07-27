@@ -3,5 +3,6 @@ rotacja.ahk
 testsize.ahk
 drawcirc.ahk
 Gdip.ahk
-testmice.ahk
+testmice.ahks
 bench.ahk
+circle.ahk
