@@ -10,15 +10,18 @@ SetMouseDelay, -1
 
 SetWorkingDir %A_ScriptDir%
 
+/*
+; If ever wanted to use Send {Click} fnc
 if not A_IsAdmin
 {
     try
     {
-      ;Run *RunAs "%A_ScriptFullPath%"  ; Requires v1.0.92.01+
+      Run *RunAs "%A_ScriptFullPath%"  ; Requires v1.0.92.01+
     }
-    ;ExitApp
+    ExitApp
 }
-;#Include obj2str.ahk
+*/
+
 Version := "1.0"
 Author := "Frostspiked"
 Global IniSections := []
@@ -42,6 +45,7 @@ If (!ini.Coordinates.Count())
 
 OnMessage(0x111,"WM_COMMAND")
 
+;Gui, Add, Text ,cRed border h0 W200 hide,
 Gui, Add, Text, yp+40, Coordinates
 
 ; Create coords GUI
@@ -77,7 +81,8 @@ For num, coordPair in ini["Coordinates"] {
 Title := StrReplace(A_ScriptName, .exe, " ")
 Title = %Title%
 
-Gui, Show, AutoSize, %Title%
+Gui, Margin , 100, 0
+Gui, Show, AutoSize xCenter, %Title%
 
 OnExit("SaveCache")
 return
@@ -262,94 +267,65 @@ AutoCoords:
   y0 := carray[2]
   1sqm := y0-28
   1sqm := Round(1sqm/5.5)
-  ;MsgBox, , ,c is: %1sqm%, 0.8
-  x1 := x0
-  y1 := y0
 
-  x2 := x0
-  y2 := y0-1sqm
+  x1row := x0-1sqm
+  Loop 3 {
+    imain := A_Index-3
+    yrow := y0+(1sqm*A_Index)-(1sqm*2)
+    Loop 3 {
+      i := imain+(A_Index*3)
+      x%i% := x1row+(A_Index*1sqm)-1sqm
+      y%i% := yrow
+    }
+  }
 
-  x3 := x0+1sqm
-  y3 := y0-1sqm
-
-  x4 := x0+1sqm
-  y4 := y0
-
-  x5 := x0+1sqm
-  y5 := y0+1sqm
-
-  x6 := x0
-  y6 := y0+1sqm
-
-  x7 := x0-1sqm
-  y7 := y0+1sqm
-
-  x8 := x0-1sqm
-  y8 := y0
-
-  x9 := x0-1sqm
-  y9 := y0-1sqm
-
-  GuiControl, Text, Pos1, x%x1% y%y1%
+  GuiControl, Text, Pos1, x%x5% y%y5%
   GuiControl, Text, Pos2, x%x2% y%y2%
   GuiControl, Text, Pos3, x%x3% y%y3%
 
-  GuiControl, Text, Pos4, x%x4% y%y4%
-  GuiControl, Text, Pos5, x%x5% y%y5%
-  GuiControl, Text, Pos6, x%x6% y%y6%
+  GuiControl, Text, Pos4, x%x6% y%y6%
+  GuiControl, Text, Pos5, x%x9% y%y9%
+  GuiControl, Text, Pos6, x%x8% y%y8%
 
   GuiControl, Text, Pos7, x%x7% y%y7%
-  GuiControl, Text, Pos8, x%x8% y%y8%
-  GuiControl, Text, Pos9, x%x9% y%y9%
+  GuiControl, Text, Pos8, x%x4% y%y4%
+  GuiControl, Text, Pos9, x%x1% y%y1%
+  
+  Global guinum := 1
+  Loop 9 {
+    xx := x%A_Index%
+    yy := y%A_Index%
+    r := 1sqm/2.5
+    hCircle%A_Index% := makeCircle(0x00FF49, r, 2, 254, xx, yy)
+  }
+  Sleep 4000
+  Loop 9 {
+    gui := hCircle%A_Index%
+    Gui %gui%: Hide
+  }
 Return
 
-/*
-GAME_TITLE := "Tibia"
-X_OFFSET := 50
-Y_OFFSET := 50
+makeCircle(color, r := 150, thickness := 10, transparency := 254, posx := 0, posy := 0) {
+	HWND := MakeGui()
 
-
-hCircle1 := makeCircle(0x00FF00, 50, 2, 200)
-
-
-;SetTimer MoveCircle, 100
-Return
-
-
-MoveCircle:
-	if (hGame := WinActive(GAME_TITLE))
-	{
-		WinGetPos x, y, , , % "ahk_id " hGame
-		Gui %hCircle%: Show, % Format("NoActivate x{} y{}", x + X_OFFSET, y + Y_OFFSET)
-	}
-	else
-		Gui %hCircle%: Hide
-Return
-*/
-makeCircle(color, r := 300, thickness := 10, transparency := 254) {
-	static HWND := MakeGui()
-
-	; https://autohotkey.com/board/topic/7377-create-a-transparent-circle-in-window-w-winset-region/
 	outer := DllCall("CreateEllipticRgn", "Int", 0, "Int", 0, "Int", r, "Int", r)
 	DllCall("SetWindowRgn", "UInt", HWND, "UInt", outer, "UInt", true)
 
-	;Gui %HWND%:Color, % color
-	;Gui %HWND%:Show, xCenter yCenter w%r% h%r% NoActivate
-	;WinSet Transparent, % transparency, % "ahk_id " HWND
-
+  offset := 6
+  halfr := r/2
+  posx := posx-halfr-offset
+  posy := posy-halfr-offset
+	Gui %HWND%:Color, % color
+	Gui %HWND%:Show, x%posx% y%posy% w%r% h%r% NoActivate
+	WinSet Transparent, % transparency, % "ahk_id " HWND
+	guinum++
 	return HWND
 }
 
 MakeGui() {
-	;Gui New, +E0x20 +AlwaysOnTop +ToolWindow -Caption +Hwndhwnd
+	Gui g%guinum%:New, +E0x20 +AlwaysOnTop +ToolWindow -Caption +Hwndhwnd
 	return hwnd
 }
-
-/*
-F12::
- Gui %hCircle1%: Hide
-Return
-*/
 
 WM_Command(wP)
 {
