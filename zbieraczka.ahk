@@ -28,6 +28,8 @@ Global IniSections := []
 Global IniSections ["Coordinates"] := {}
 Global IniSections ["Hotkeys"] := {}
 
+Global guinum := 1
+
 cachePth = %A_ScriptFullPath%:Stream:$DATA
 Global cachePath := cachePth
 Global ini := ReadINI(cachePath)
@@ -56,6 +58,7 @@ Loop 9 {
 
 ;Gui, Add, Text, vPos0 gAutoCoords, AutoLoot Hotkeys.
 Gui, Add, Edit, xs vPos0 gAutoCoords W75 Section hide, x0 y0
+Gui, Add, Button, xs gCoordArray W75 Section, CoordArray
 Gui, Add, Button, w40 vPosEvent0 gSelectCoords Section, AutoCoords
 
 Gui, Add, Text, xs yp+40, AutoLoot Hotkeys.
@@ -65,6 +68,10 @@ Gui, Add, Button, w60 gRem_htk ys, Remove
 Gui, Add, StatusBar,,
 SB_SetText("by " . Author . " v" . Version, 1)
 
+; Remove '.exe' from title
+Title := StrReplace(A_ScriptName, .exe, " ")
+Title = %Title%
+
 ; Load values from store
 For num, htk in ini["Hotkeys"] {
 		Gui, Add, Hotkey, xs vTrigger_htk%num% gTrigger_htk, %htk%
@@ -72,17 +79,13 @@ For num, htk in ini["Hotkeys"] {
     ini["Hotkeys"][num] := htk
 }
 
+Gui, Margin , 100, 0
+Gui, Show, AutoSize xCenter, %Title%
+
 For num, coordPair in ini["Coordinates"] {
   GuiControl, Text, Pos%num%, %coordPair%
   Coordinates[num] := coordPair
 }
-
-; Remove '.exe' from title
-Title := StrReplace(A_ScriptName, .exe, " ")
-Title = %Title%
-
-Gui, Margin , 100, 0
-Gui, Show, AutoSize xCenter, %Title%
 
 OnExit("SaveCache")
 return
@@ -196,15 +199,50 @@ SelectCoords:
 	SetTimer, WatchCursor, 20
 return
 
-UpdateCoords:
-  Loop 9 {
-    GuiControlGet, OutputVar, , Pos%A_Index%
-    Coordinates[A_Index] := OutputVar
-  }
-
+CoordArray:
   For key, val in Coordinates
-      ;MsgBox % val
+    MsgBox % val
+return
 
+UpdateCoords:
+  index := SubStr(A_GuiControl,A_GuiControl.length - 1)
+  ;MsgBox, , , , 0.5
+  
+  GuiControlGet, OutputVar, , Pos%index%
+  ;MsgBox, , , %index%: %OutputVar%, 0.5
+  Coordinates[index] := OutputVar
+  ;ShowCircle(index)
+  
+
+  ;For key, val in Coordinates
+      ;MsgBox % val
+/*
+  
+  ;Loop 9 {
+    coords := Coordinates[index]
+    coords := StrReplace(coords, "x", "")
+    coords := StrReplace(coords, "y", "")
+    carray := StrSplit(coords, A_Space)
+    cx := carray[1]
+    yx := carray[2]
+  
+    ;xx := x%A_Index%
+    ;yy := y%A_Index%
+    ;1sqm := y0-28
+    ;1sqm := Round(1sqm/5.5)
+    r := CalcR()
+    hCircle%index% := makeCircle(0x00FF49, r, 2, 254, cx, yx)
+    ;Sleep 250
+  ;}
+  MsgBox, , , %index%: %OutputVar%, 0.5
+    Sleep 500
+  ;Loop 9 {
+    gui := hCircle%index%
+    Gui %gui%: Hide
+    ;MsgBox, %index%
+    
+  ;}
+*/
 return
 
 Zbieraczka:
@@ -266,14 +304,14 @@ AutoCoords:
   x0 := carray[1]
   y0 := carray[2]
   1sqm := y0-28
-  1sqm := Round(1sqm/5.5)
+  Global  1sqm := Round(1sqm/5.5)
 
   x1row := x0-1sqm
   Loop 3 {
-    imain := A_Index-3
+    imain := (A_Index*3)-3
     yrow := y0+(1sqm*A_Index)-(1sqm*2)
     Loop 3 {
-      i := imain+(A_Index*3)
+      i := imain+A_Index
       x%i% := x1row+(A_Index*1sqm)-1sqm
       y%i% := yrow
     }
@@ -282,7 +320,7 @@ AutoCoords:
   GuiControl, Text, Pos1, x%x5% y%y5%
   GuiControl, Text, Pos2, x%x2% y%y2%
   GuiControl, Text, Pos3, x%x3% y%y3%
-
+  
   GuiControl, Text, Pos4, x%x6% y%y6%
   GuiControl, Text, Pos5, x%x9% y%y9%
   GuiControl, Text, Pos6, x%x8% y%y8%
@@ -290,17 +328,31 @@ AutoCoords:
   GuiControl, Text, Pos7, x%x7% y%y7%
   GuiControl, Text, Pos8, x%x4% y%y4%
   GuiControl, Text, Pos9, x%x1% y%y1%
-  
+/*
   Global guinum := 1
   Loop 9 {
     xx := x%A_Index%
     yy := y%A_Index%
-    r := 1sqm/2.5
+    r := Round(1sqm/2.5)
     hCircle%A_Index% := makeCircle(0x00FF49, r, 2, 254, xx, yy)
+    Sleep 125
   }
   Sleep 4000
   Loop 9 {
     gui := hCircle%A_Index%
+    Gui %gui%: Hide
+  }
+ */
+
+  Loop 9 {
+    ShowCircle(A_Index)
+    Sleep 125
+  }
+
+  Sleep 1000
+  Loop 9 {
+    Sleep 250
+    gui := hCircle%index%
     Gui %gui%: Hide
   }
 Return
@@ -310,7 +362,6 @@ makeCircle(color, r := 150, thickness := 10, transparency := 254, posx := 0, pos
 
 	outer := DllCall("CreateEllipticRgn", "Int", 0, "Int", 0, "Int", r, "Int", r)
 	DllCall("SetWindowRgn", "UInt", HWND, "UInt", outer, "UInt", true)
-
   offset := 6
   halfr := r/2
   posx := posx-halfr-offset
@@ -325,6 +376,33 @@ makeCircle(color, r := 150, thickness := 10, transparency := 254, posx := 0, pos
 MakeGui() {
 	Gui g%guinum%:New, +E0x20 +AlwaysOnTop +ToolWindow -Caption +Hwndhwnd
 	return hwnd
+}
+
+CalcR() {
+  coords := Coordinates[1]
+  coords := StrReplace(coords, "x", "")
+  coords := StrReplace(coords, "y", "")
+  carray := StrSplit(coords, A_Space)
+  y0 := carray[2]
+
+  ;xx := x%A_Index%
+  ;yy := y%A_Index%
+  1sqm := y0-28
+  1sqm := Round(1sqm/5.5)
+  r := Round(1sqm/2.5)
+  return r
+}
+
+ShowCircle(index) {
+  coords := Coordinates[index]
+  coords := StrReplace(coords, "x", "")
+  coords := StrReplace(coords, "y", "")
+  carray := StrSplit(coords, A_Space)
+  cx := carray[1]
+  yx := carray[2]
+
+  r := CalcR()
+  hCircle%index% := makeCircle(0x00FF49, r, 2, 254, cx, yx)
 }
 
 WM_Command(wP)
