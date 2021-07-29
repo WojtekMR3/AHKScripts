@@ -349,11 +349,9 @@ AutoCoords:
     Sleep 125
   }
 
-  Sleep 1000
+  ;Sleep 1000
   Loop 9 {
-    Sleep 250
-    gui := hCircle%index%
-    Gui %gui%: Hide
+
   }
 Return
 
@@ -403,6 +401,11 @@ ShowCircle(index) {
 
   r := CalcR()
   hCircle%index% := makeCircle(0x00FF49, r, 2, 254, cx, yx)
+}
+
+HideCircle(index) {
+    gui := hCircle%index%
+    Gui %gui%: Hide
 }
 
 WM_Command(wP)
