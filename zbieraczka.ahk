@@ -28,12 +28,12 @@ Global IniSections := []
 Global IniSections ["Coordinates"] := {}
 Global IniSections ["Hotkeys"] := {}
 
-Global guinum := 1
+;Global guinum := 1
 
 cachePth = %A_ScriptFullPath%:Stream:$DATA
 Global cachePath := cachePth
 Global ini := ReadINI(cachePath)
-Global Coordinates := []
+Global CircleHWNDs := []
 
 If (!ini.Hotkeys.Count())
 {
@@ -47,7 +47,8 @@ If (!ini.Coordinates.Count())
 
 OnMessage(0x111,"WM_COMMAND")
 
-;Gui, Add, Text ,cRed border h0 W200 hide,
+Global Guihwnd := "InstantHotkey"
+Gui, %Guihwnd%:New
 Gui, Add, Text, yp+40, Coordinates
 
 ; Create coords GUI
@@ -58,7 +59,6 @@ Loop 9 {
 
 ;Gui, Add, Text, vPos0 gAutoCoords, AutoLoot Hotkeys.
 Gui, Add, Edit, xs vPos0 gAutoCoords W75 Section hide, x0 y0
-Gui, Add, Button, xs gCoordArray W75 Section, CoordArray
 Gui, Add, Button, w40 vPosEvent0 gSelectCoords Section, AutoCoords
 
 Gui, Add, Text, xs yp+40, AutoLoot Hotkeys.
@@ -66,7 +66,7 @@ Gui, Add, Button, w40 gAdd_htk Section, Add
 Gui, Add, Button, w60 gRem_htk ys, Remove
 
 Gui, Add, StatusBar,,
-SB_SetText("by " . Author . " v" . Version, 1)
+SB_SetText("AutoLoot " . Version . " by " . Author, 1)
 
 ; Remove '.exe' from title
 Title := StrReplace(A_ScriptName, .exe, " ")
@@ -79,13 +79,12 @@ For num, htk in ini["Hotkeys"] {
     ini["Hotkeys"][num] := htk
 }
 
-Gui, Margin , 100, 0
-Gui, Show, AutoSize xCenter, %Title%
-
 For num, coordPair in ini["Coordinates"] {
-  GuiControl, Text, Pos%num%, %coordPair%
-  Coordinates[num] := coordPair
+  GuiControl, %Guihwnd%:Text, Pos%num%, %coordPair%
 }
+
+Gui, Margin , 100, 5
+Gui, Show, AutoSize xCenter, %Title%
 
 OnExit("SaveCache")
 return
@@ -94,13 +93,13 @@ SaveCache(ExitReason, ExitCode)
 {
 	; Retrieve all hotkey binds.
 	Loop % ini["Hotkeys"].Count() {
-		GuiControlGet, htk ,, Trigger_htk%A_Index%
+		GuiControlGet, htk , %Guihwnd%:, Trigger_htk%A_Index%
 		; Create array and save it to db.
 		IniSections["Hotkeys"].Push(htk)
 	}
 
   Loop 9 {
-		GuiControlGet, OutputVar, , Pos%A_Index%
+		GuiControlGet, OutputVar, %Guihwnd%:, Pos%A_Index%
 		; Create array and save it to db.
 		IniSections["Coordinates"].Push(OutputVar)
 	}
@@ -108,7 +107,7 @@ SaveCache(ExitReason, ExitCode)
 	WriteINI(IniSections, cachePath)
 }
 
-GuiClose:
+InstantHotkeyGuiClose:
 	ExitApp
 return
 
@@ -124,20 +123,23 @@ Rem_htk:
 	Reload
 return
 
-; Only triggers on hotkey change, if htk is same it doesn't trigger.
-Trigger_htk:
-	If %A_GuiControl%  in +,!,^,+^,+!,^!,+^!            ;If the hotkey contains only modifiers, return to wait for a key.
-		return
-	num := SubStr(A_GuiControl,A_GuiControl.length - 1)
-  Key := % %A_GuiControl%
-  SetZbieraczkaHotkey(num, Key)
-return
+HotkeyCtrlHasFocus() {
+ GuiControlGet, ctrl, %Guihwnd%:Focus       ;ClassNN
+ If InStr(ctrl,"hotkey") {
+  GuiControlGet, ctrl, %Guihwnd%:FocusV     ;Associated variable
+  Return, ctrl
+ }
+}
 
 #If ctrl := HotkeyCtrlHasFocus()
   *Delete::
   *Escape::
   *Space::
   *Tab::
+  *PgUp::
+  *PgDn::
+  *Home::
+  *End::
      modifier := ""
     If GetKeyState("Shift","P")
       modifier .= "+"
@@ -147,33 +149,39 @@ return
       modifier .= "!"
     num := SubStr(ctrl,ctrl.length - 1)
     Key := modifier SubStr(A_ThisHotkey,2)
-    GuiControl,,%ctrl%, % Key
+    GuiControl, %Guihwnd%:, %ctrl%, % Key
     SetZbieraczkaHotkey(num, Key)
   return
 #If
 
-HotkeyCtrlHasFocus() {
- GuiControlGet, ctrl, Focus       ;ClassNN
- If InStr(ctrl,"hotkey") {
-  GuiControlGet, ctrl, FocusV     ;Associated variable
-  Return, ctrl
- }
-}
+; Only triggers on hotkey change, if htk is same it doesn't trigger.
+Trigger_htk:
+	If %A_GuiControl%  in +,!,^,+^,+!,^!,+^!            ;If the hotkey contains only modifiers, return to wait for a key.
+		return
+	num := SubStr(A_GuiControl,A_GuiControl.length - 1)
+  Key := % %A_GuiControl%
+  SetZbieraczkaHotkey(num, Key)
+return
 
 SetZbieraczkaHotkey(num, key) {
   ln := ini["Hotkeys"].Count()
+  
   Loop % ln {
     if (key = ini["Hotkeys"][A_Index]) {
+      
       dup := A_Index
       ; If duplicate hotkey is blank, do not alert it to user
-      if (Trigger_htk%dup% == "") {
+      GuiControlGet, dupCtrl , %Guihwnd%:, Trigger_htk%dup%
+      if (dupCtrl == "") {
         break
       }
+
       Loop,6 {
         GuiControl,% "Disable" b:=!b, Trigger_htk%dup%   ;Flash the original hotkey to alert the user.
         Sleep,120
       }
-      GuiControl,,Trigger_htk%num%,% Trigger_htk%num% :=""       ;Delete the hotkey and clear the control.
+
+      GuiControl, %Guihwnd%:,Trigger_htk%num%,% Trigger_htk%num% :=""       ;Delete the hotkey and clear the control.
       break
     }
   }
@@ -199,83 +207,27 @@ SelectCoords:
 	SetTimer, WatchCursor, 20
 return
 
-CoordArray:
-  For key, val in Coordinates
-    MsgBox % val
-return
-
 UpdateCoords:
-  index := SubStr(A_GuiControl,A_GuiControl.length - 1)
-  ;MsgBox, , , , 0.5
-  
-  GuiControlGet, OutputVar, , Pos%index%
-  ;MsgBox, , , %index%: %OutputVar%, 0.5
-  Coordinates[index] := OutputVar
-  ;ShowCircle(index)
-  
-
-  ;For key, val in Coordinates
-      ;MsgBox % val
-/*
-  
-  ;Loop 9 {
-    coords := Coordinates[index]
-    coords := StrReplace(coords, "x", "")
-    coords := StrReplace(coords, "y", "")
-    carray := StrSplit(coords, A_Space)
-    cx := carray[1]
-    yx := carray[2]
-  
-    ;xx := x%A_Index%
-    ;yy := y%A_Index%
-    ;1sqm := y0-28
-    ;1sqm := Round(1sqm/5.5)
-    r := CalcR()
-    hCircle%index% := makeCircle(0x00FF49, r, 2, 254, cx, yx)
-    ;Sleep 250
-  ;}
-  MsgBox, , , %index%: %OutputVar%, 0.5
-    Sleep 500
-  ;Loop 9 {
-    gui := hCircle%index%
-    Gui %gui%: Hide
-    ;MsgBox, %index%
-    
-  ;}
-*/
 return
 
 Zbieraczka:
-  ;MsgBox, , , Zbieracz, 0.3
-  ;WinActivate, Program Manager
+  ;MsgBox, , , Zbiera, 0.3
+  Sleep 20
   if !(WinActive("Tibia -")) {
     return
   }
 
   BlockInput, On
-  MouseGetPos, xpos, ypos
 
   SendInput {Shift Down}
   ; If sleep is less than 1, theres high chance tibia wont detect shift keypress before mouse clicks.
-  Sleep 5
+  Sleep 10
   Loop 9 {
-    coords := Coordinates[A_Index]
-    coords := StrReplace(coords, "x", "")
-    coords := StrReplace(coords, "y", "")
-    carray := StrSplit(coords, A_Space)
-    cx := carray[1]
-    yx := carray[2]
-    ;Shift + Right
-    ;SendInput +{Click %cx% %yx% Right}
-    
-    ;Send {Click %cx% %yx% Right}
-    ControlClick, x%cx% y%yx%, Tibia ,,Right
-    
+    GuiControlGet, coordsPair, %Guihwnd%:, Pos%A_Index%
+    ControlClick, %coordsPair%, Tibia ,,Right
   }
-  Sleep 5
+  Sleep 10
   SendInput {Shift Up}
-
-  Send {Click %xpos% %ypos% 0}
   BlockInput, Off
 return
 
@@ -288,7 +240,7 @@ WatchCursor:
 	if (GetKeyState("LButton")) {
 		MsgBox, , , %xpos% %ypos%, 0.3
 		BlockInput, Mouse
-		GuiControl, Text, Pos%numx%, x%xpos% y%ypos%
+		GuiControl, %Guihwnd%:Text, Pos%numx%, x%xpos% y%ypos%
 		SetTimer, WatchCursor, Off
 		ToolTip
 		;WinActivate, %A_ScriptName%
@@ -296,15 +248,12 @@ WatchCursor:
 return
 
 AutoCoords:
-	GuiControlGet, center, , Pos0
-  coords := center
-  coords := StrReplace(coords, "x", "")
-  coords := StrReplace(coords, "y", "")
-  carray := StrSplit(coords, A_Space)
-  x0 := carray[1]
-  y0 := carray[2]
-  1sqm := y0-28
-  Global  1sqm := Round(1sqm/5.5)
+	GuiControlGet, center, %Guihwnd%:, Pos0
+  coords := StripXYcoords(center)
+  x0 := coords[1]
+  y0 := coords[2]
+  Global 1sqm := y0-28
+  1sqm := Round(1sqm/5.5)
 
   x1row := x0-1sqm
   Loop 3 {
@@ -317,41 +266,27 @@ AutoCoords:
     }
   }
 
-  GuiControl, Text, Pos1, x%x5% y%y5%
-  GuiControl, Text, Pos2, x%x2% y%y2%
-  GuiControl, Text, Pos3, x%x3% y%y3%
+  GuiControl, %Guihwnd%:Text, Pos1, x%x5% y%y5%
+  GuiControl, %Guihwnd%:Text, Pos2, x%x2% y%y2%
+  GuiControl, %Guihwnd%:Text, Pos3, x%x3% y%y3%
   
-  GuiControl, Text, Pos4, x%x6% y%y6%
-  GuiControl, Text, Pos5, x%x9% y%y9%
-  GuiControl, Text, Pos6, x%x8% y%y8%
+  GuiControl, %Guihwnd%:Text, Pos4, x%x6% y%y6%
+  GuiControl, %Guihwnd%:Text, Pos5, x%x9% y%y9%
+  GuiControl, %Guihwnd%:Text, Pos6, x%x8% y%y8%
 
-  GuiControl, Text, Pos7, x%x7% y%y7%
-  GuiControl, Text, Pos8, x%x4% y%y4%
-  GuiControl, Text, Pos9, x%x1% y%y1%
-/*
+  GuiControl, %Guihwnd%:Text, Pos7, x%x7% y%y7%
+  GuiControl, %Guihwnd%:Text, Pos8, x%x4% y%y4%
+  GuiControl, %Guihwnd%:Text, Pos9, x%x1% y%y1%
+
   Global guinum := 1
   Loop 9 {
-    xx := x%A_Index%
-    yy := y%A_Index%
-    r := Round(1sqm/2.5)
-    hCircle%A_Index% := makeCircle(0x00FF49, r, 2, 254, xx, yy)
-    Sleep 125
-  }
-  Sleep 4000
-  Loop 9 {
-    gui := hCircle%A_Index%
-    Gui %gui%: Hide
-  }
- */
-
-  Loop 9 {
     ShowCircle(A_Index)
-    Sleep 125
+    ;Sleep 50
   }
 
-  ;Sleep 1000
+  Sleep 3000
   Loop 9 {
-
+    HideCircle(A_Index)
   }
 Return
 
@@ -364,6 +299,7 @@ makeCircle(color, r := 150, thickness := 10, transparency := 254, posx := 0, pos
   halfr := r/2
   posx := posx-halfr-offset
   posy := posy-halfr-offset
+  ;MsgBox, posx: %posx% posy: %posy%
 	Gui %HWND%:Color, % color
 	Gui %HWND%:Show, x%posx% y%posy% w%r% h%r% NoActivate
 	WinSet Transparent, % transparency, % "ahk_id " HWND
@@ -377,35 +313,37 @@ MakeGui() {
 }
 
 CalcR() {
-  coords := Coordinates[1]
-  coords := StrReplace(coords, "x", "")
-  coords := StrReplace(coords, "y", "")
-  carray := StrSplit(coords, A_Space)
-  y0 := carray[2]
+  GuiControlGet, coords, %Guihwnd%:, Pos1
+  coords := StripXYcoords(coords)
+  y0 := coords[2]
 
-  ;xx := x%A_Index%
-  ;yy := y%A_Index%
   1sqm := y0-28
   1sqm := Round(1sqm/5.5)
-  r := Round(1sqm/2.5)
+  r := Round(1sqm/3)
   return r
 }
 
 ShowCircle(index) {
-  coords := Coordinates[index]
-  coords := StrReplace(coords, "x", "")
-  coords := StrReplace(coords, "y", "")
-  carray := StrSplit(coords, A_Space)
-  cx := carray[1]
-  yx := carray[2]
-
+  GuiControlGet, coords, %Guihwnd%:, Pos%index%
+  coords := StripXYcoords(coords)
+  cx := coords[1]
+  yx := coords[2]
+  ;MsgBox, posx: %cx% posy: %yx%
   r := CalcR()
-  hCircle%index% := makeCircle(0x00FF49, r, 2, 254, cx, yx)
+  hCircle := makeCircle(0x00FF49, r, 2, 254, cx, yx)
+  CircleHWNDs[index] := hCircle
 }
 
 HideCircle(index) {
-    gui := hCircle%index%
+    gui := CircleHWNDs[index]
     Gui %gui%: Hide
+}
+
+StripXYcoords(coords) {
+  coords := StrReplace(coords, "x", "")
+  coords := StrReplace(coords, "y", "")
+  carray := StrSplit(coords, A_Space)
+  return carray
 }
 
 WM_Command(wP)
@@ -426,7 +364,6 @@ WM_Command(wP)
       Menu, TRAY, Icon, %tray_icon_paused%	;,,1		;Menu, Tray, Icon, Shell32.dll, 110, 1 <-- maybe should use dll icons?
   }
 }
-
 
 ; INI MAKER
 ;-------------------------------------------------------------------------------
