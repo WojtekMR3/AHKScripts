@@ -7,33 +7,16 @@ SetControlDelay -1
 SetKeyDelay, 0
 SetDefaultMouseSpeed, 0
 SetMouseDelay, -1
-
 SetWorkingDir %A_ScriptDir%
 
-/*
-; If ever wanted to use Send {Click} fnc
-if not A_IsAdmin
-{
-    try
-    {
-      Run *RunAs "%A_ScriptFullPath%"  ; Requires v1.0.92.01+
-    }
-    ExitApp
-}
-*/
-
-Version := "1.0"
-Author := "Frostspiked"
 Global IniSections := []
 Global IniSections ["Coordinates"] := {}
 Global IniSections ["Hotkeys"] := {}
 
-;Global guinum := 1
-
 cachePth = %A_ScriptFullPath%:Stream:$DATA
 Global cachePath := cachePth
 Global ini := ReadINI(cachePath)
-Global CircleHWNDs := []
+Global CircleHWNDs := {}
 
 If (!ini.Hotkeys.Count())
 {
@@ -49,24 +32,23 @@ OnMessage(0x111,"WM_COMMAND")
 
 Global Guihwnd := "InstantHotkey"
 Gui, %Guihwnd%:New
-Gui, Add, Text, yp+40, Coordinates
 
+Gui, Add, Button, w40 vPosEvent0 gAutoCoords Section, AutoCoords
+Gui, Add, Text, yp+40, Coordinates
+Gui, Add, Edit, xs vPos0 gCalcPos W75 Section hide, x0 y0
 ; Create coords GUI
 Loop 9 {
-  Gui, Add, Edit, xs vPos%A_Index% gUpdateCoords W75 Section, x0 y0
+  Gui, Add, Text, xs Section, %A_Index%
+  Gui, Add, Edit, ys vPos%A_Index% gUpdateCoords W75, x0 y0
   Gui, Add, Button, w35 vPosEvent%A_Index% gSelectCoords ys, Pos
 }
-
-;Gui, Add, Text, vPos0 gAutoCoords, AutoLoot Hotkeys.
-Gui, Add, Edit, xs vPos0 gAutoCoords W75 Section hide, x0 y0
-Gui, Add, Button, w40 vPosEvent0 gSelectCoords Section, AutoCoords
 
 Gui, Add, Text, xs yp+40, AutoLoot Hotkeys.
 Gui, Add, Button, w40 gAdd_htk Section, Add
 Gui, Add, Button, w60 gRem_htk ys, Remove
 
 Gui, Add, StatusBar,,
-SB_SetText("AutoLoot " . Version . " by " . Author, 1)
+SB_SetText("AutoLoot by Frostspiked", 1)
 
 ; Remove '.exe' from title
 Title := StrReplace(A_ScriptName, .exe, " ")
@@ -85,6 +67,8 @@ For num, coordPair in ini["Coordinates"] {
 
 Gui, Margin , 100, 5
 Gui, Show, AutoSize xCenter, %Title%
+
+FlashCircles(3000)
 
 OnExit("SaveCache")
 return
@@ -200,27 +184,33 @@ SetZbieraczkaHotkey(num, key) {
   }
 }
 
+AutoCoords:
+  MsgBox, , , Select character position, 0.8
+  Goto, SelectCoords
+Return
+
 SelectCoords:
-	WinActivate, Tibia 
+	WinActivate, Tibia
   Global numx := SubStr(A_GuiControl,A_GuiControl.length - 1)
-  ;Global numx := A_GuiControl
 	SetTimer, WatchCursor, 20
 return
+
+CalcPos:
+  ;CalcPositions()
+Return
 
 UpdateCoords:
 return
 
 Zbieraczka:
   ;MsgBox, , , Zbiera, 0.3
-  Sleep 20
+  Sleep 25
   if !(WinActive("Tibia -")) {
     return
   }
 
   BlockInput, On
-
   SendInput {Shift Down}
-  ; If sleep is less than 1, theres high chance tibia wont detect shift keypress before mouse clicks.
   Sleep 10
   Loop 9 {
     GuiControlGet, coordsPair, %Guihwnd%:, Pos%A_Index%
@@ -240,14 +230,26 @@ WatchCursor:
 	if (GetKeyState("LButton")) {
 		MsgBox, , , %xpos% %ypos%, 0.3
 		BlockInput, Mouse
-		GuiControl, %Guihwnd%:Text, Pos%numx%, x%xpos% y%ypos%
 		SetTimer, WatchCursor, Off
 		ToolTip
-		;WinActivate, %A_ScriptName%
+    ;--------
+    GuiControl, %Guihwnd%:Text, Pos%numx%, x%xpos% y%ypos%
+    if (numx == 0) {
+      ; Flash circles for longer
+      CalcPositions()
+      numx := 1
+      ShowCircle(numx, 0xff1122)
+      FlashCircles(3000)
+    } else {
+      ; Flash circles for shorter like 1s
+      ShowCircle(numx, 0xff1122)
+      FlashCircles(1500)
+      WinActivate, %A_ScriptName%
+    }
 	}
 return
 
-AutoCoords:
+CalcPositions() {
 	GuiControlGet, center, %Guihwnd%:, Pos0
   coords := StripXYcoords(center)
   x0 := coords[1]
@@ -277,20 +279,9 @@ AutoCoords:
   GuiControl, %Guihwnd%:Text, Pos7, x%x7% y%y7%
   GuiControl, %Guihwnd%:Text, Pos8, x%x4% y%y4%
   GuiControl, %Guihwnd%:Text, Pos9, x%x1% y%y1%
+}
 
-  Global guinum := 1
-  Loop 9 {
-    ShowCircle(A_Index)
-    ;Sleep 50
-  }
-
-  Sleep 3000
-  Loop 9 {
-    HideCircle(A_Index)
-  }
-Return
-
-makeCircle(color, r := 150, thickness := 10, transparency := 254, posx := 0, posy := 0) {
+makeCircle(color, r := 150, thickness := 10, transparency := 254, posx := 0, posy := 0, i := 0) {
 	HWND := MakeGui()
 
 	outer := DllCall("CreateEllipticRgn", "Int", 0, "Int", 0, "Int", r, "Int", r)
@@ -299,16 +290,16 @@ makeCircle(color, r := 150, thickness := 10, transparency := 254, posx := 0, pos
   halfr := r/2
   posx := posx-halfr-offset
   posy := posy-halfr-offset
-  ;MsgBox, posx: %posx% posy: %posy%
 	Gui %HWND%:Color, % color
+  Gui %HWND%:Font, s8 w600,
+  Gui %HWND%:Add, Text, cDefault, %i%
 	Gui %HWND%:Show, x%posx% y%posy% w%r% h%r% NoActivate
 	WinSet Transparent, % transparency, % "ahk_id " HWND
-	guinum++
 	return HWND
 }
 
 MakeGui() {
-	Gui g%guinum%:New, +E0x20 +AlwaysOnTop +ToolWindow -Caption +Hwndhwnd
+	Gui New, +E0x20 +AlwaysOnTop +ToolWindow -Caption +Hwndhwnd
 	return hwnd
 }
 
@@ -319,24 +310,43 @@ CalcR() {
 
   1sqm := y0-28
   1sqm := Round(1sqm/5.5)
-  r := Round(1sqm/3)
+  r := Round((1sqm/3)+5)
   return r
 }
 
-ShowCircle(index) {
+ShowCircle(index, clr := "0x00FF49") {
+  if (CircleHWNDs[index]) {
+    return
+  }
   GuiControlGet, coords, %Guihwnd%:, Pos%index%
+  If (coords = "") {
+    return
+  }
   coords := StripXYcoords(coords)
   cx := coords[1]
   yx := coords[2]
-  ;MsgBox, posx: %cx% posy: %yx%
   r := CalcR()
-  hCircle := makeCircle(0x00FF49, r, 2, 254, cx, yx)
+  hCircle := makeCircle(clr, r, 2, 254, cx, yx, index)
   CircleHWNDs[index] := hCircle
 }
 
 HideCircle(index) {
+    if (!CircleHWNDs[index]) {
+      return
+    }
     gui := CircleHWNDs[index]
     Gui %gui%: Hide
+    CircleHWNDs.Delete(index)
+}
+
+FlashCircles(ms) {
+  Loop 9 {
+    ShowCircle(A_Index)
+  }
+  Sleep %ms%
+  Loop 9 {
+    HideCircle(A_Index)
+  }
 }
 
 StripXYcoords(coords) {
