@@ -96,6 +96,14 @@ Rem_htk:
 	Reload
 return
 
+HotkeyCtrlHasFocus() {
+ GuiControlGet, ctrl, Focus       ;ClassNN
+ If InStr(ctrl,"hotkey") {
+  GuiControlGet, ctrl, FocusV     ;Associated variable
+  Return, ctrl
+ }
+}
+
 Trigger_htk:
 	If %A_GuiControl%  in +,^,!,+^,+!,^!,+^!            ;If the hotkey contains only modifiers, return to wait for a key.
 		return
