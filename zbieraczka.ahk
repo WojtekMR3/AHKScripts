@@ -124,6 +124,11 @@ HotkeyCtrlHasFocus() {
   *PgDn::
   *Home::
   *End::
+  *MButton::
+  *XButton1::
+  *XButton2::
+  *WheelDown::
+  *WheelUp::
      modifier := ""
     If GetKeyState("Shift","P")
       modifier .= "+"
