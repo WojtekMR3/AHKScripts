@@ -104,22 +104,78 @@ HotkeyCtrlHasFocus() {
  }
 }
 
+#If ctrl := HotkeyCtrlHasFocus()
+  *Delete::
+  *Escape::
+  *Space::
+  *Tab::
+  *PgUp::
+  *PgDn::
+  *Home::
+  *End::
+     modifier := ""
+    If GetKeyState("Shift","P")
+      modifier .= "+"
+    If GetKeyState("Ctrl","P")
+      modifier .= "^"
+    If GetKeyState("Alt","P")
+      modifier .= "!"
+    num := SubStr(ctrl,ctrl.length - 1)
+    Key := modifier SubStr(A_ThisHotkey,2)
+    GuiControl, , %ctrl%, % Key
+    SetZbieraczkaHotkey(num, Key)
+  return
+#If
+
+; Only triggers on hotkey change, if htk is same it doesn't trigger.
 Trigger_htk:
-	If %A_GuiControl%  in +,^,!,+^,+!,^!,+^!            ;If the hotkey contains only modifiers, return to wait for a key.
+	If %A_GuiControl%  in +,!,^,+^,+!,^!,+^!            ;If the hotkey contains only modifiers, return to wait for a key.
 		return
 	num := SubStr(A_GuiControl,A_GuiControl.length - 1)
-	If (savedHK%num%) { ;If a hotkey was already saved...
-		Hotkey,% savedHK%num%, Uhaczka, Off        ;     turn the old hotkey off
-		savedHK := false                    ;     add the word 'OFF' to display in a message.
- 	}
-	Keys := % %A_GuiControl%
-	Hotkey, ~%Keys%, Uhaczka, On
-	savedHK%num% := %A_GuiControl%
-	WinActivate, Program Manager ; lose focus
+  Key := % %A_GuiControl%
+  SetZbieraczkaHotkey(num, Key)
 return
+
+SetZbieraczkaHotkey(num, key) {
+  ln := ini["Hotkeys"].Count()
+  
+  Loop % ln {
+    if (key = ini["Hotkeys"][A_Index]) {
+      
+      dup := A_Index
+      ; If duplicate hotkey is blank, do not alert it to user
+      GuiControlGet, dupCtrl , , Trigger_htk%dup%
+      if (dupCtrl == "") {
+        break
+      }
+
+      Loop,6 {
+        GuiControl,% "Disable" b:=!b, Trigger_htk%dup%   ;Flash the original hotkey to alert the user.
+        Sleep,120
+      }
+
+      GuiControl, ,Trigger_htk%num%,% Trigger_htk%num% :=""       ;Delete the hotkey and clear the control.
+      break
+    }
+  }
+
+	If (ini["Hotkeys"][num]) { ;If a hotkey was already saved...
+    oldHtk := ini["Hotkeys"][num]
+		Hotkey, %oldHtk%, Uhaczka, Off        ;     turn the old hotkey off
+		ini["Hotkeys"][num] := false        ;     add the word 'OFF' to display in a message.
+ 	}
+
+  if (!dup) {
+    Hotkey, ~%Key%, Uhaczka, On
+    ini["Hotkeys"][num] := key
+    ;savedHK%num% := key
+    WinActivate, Program Manager ; lose focus
+  }
+}
 
 Uhaczka:
   ;MsgBox, , , uhaczka, 0.3
+  if WinActive("Tibia -")
 	sleep 35 ; fix for low
 	GuiControlGet, coords ,, TankerPos
 	GuiControlGet, UH_Htk ,, UH_hotkey
@@ -136,14 +192,12 @@ Uhaczka:
     }
   }
 
-  ;SendInput, {%LMod% Down}
   if (LMod) {
     SendInput, {%LMod% Down}{%UH_Htk%}{%LMod% Up}
   } else {
     SendInput, {%UH_Htk%}
   }
   
-  ;SendInput, {%LMod% Up}
   Sleep 1
   ControlClick, %coords%, Tibia -,,Left
 
@@ -168,7 +222,7 @@ WatchCursor:
 		GuiControl, Move, TankerPos, W300
 		SetTimer, WatchCursor, Off
 		ToolTip
-		;WinActivate, %A_ScriptName%
+		WinActivate, %A_ScriptName%
 	}
 return
 
