@@ -15,7 +15,6 @@ cachePth = %A_ScriptFullPath%:Stream:$DATA
 Global cachePath := cachePth
 Global ini := ReadINI(cachePath)
 Global Modifiers := {"Alt": "!", "Ctrl": "^", "Shift": "+"}
-Global LMod := false
 
 if (!ini.Singular.count()) {
 	ini.Singular := IniSections.Singular.Clone()
@@ -33,7 +32,7 @@ Gui, Add, Button, w133 gSelectCoords, Select target position
 Gui, Add, Text, xs xp+2 vTankerPos W50 Section
 
 Gui, Add, Text, x10 yp+40, UH Rune Hotkey in game ; The ym option starts a new column of controls.
-Gui, Add, Hotkey, vUH_hotkey gUH_hotkey, F1
+Gui, Add, Hotkey, vUH_hotkey, F1
 
 Gui, Add, Text, yp+40, AutoUH Hotkeys.
 Gui, Add, Button, w40 gAdd_htk Section, Add
@@ -45,7 +44,7 @@ SB_SetText("AutoUH by Frostspiked", 1)
 For num, htk in ini["UhaczkaHotkeys"] {
 		Gui, Add, Hotkey, xs vTrigger_htk%num% gTrigger_htk, %htk%
 		Hotkey, ~%htk%, Uhaczka, On
-		savedHK%num% = %htk%
+		ini["Hotkeys"][num] := htk
 }
 
 ; Load values from store
@@ -176,19 +175,6 @@ SetZbieraczkaHotkey(num, key) {
   }
 }
 
-UH_hotkey:
-	If %A_GuiControl%  in +,!,^,+^,+!,^!,+^!            ;If the hotkey contains only modifiers, return to wait for a key.
-		return
-  LMod := false
-  For LiteralMod, Mod in Modifiers {
-    if (InStr(UH_Htk, Mod)) {
-      UH_Htk := StrReplace(UH_Htk, Mod, "")
-      LMod := LiteralMod
-      break
-    }
-  }
-Return
-
 Uhaczka:
   ;MsgBox, , , uhaczka, 0.3
   if !(WinActive("Tibia -")) {
@@ -201,6 +187,15 @@ Uhaczka:
 	SetControlDelay -1
   BlockInput On
 
+  LMod := false
+  For LiteralMod, Mod in Modifiers {
+    if (InStr(UH_Htk, Mod)) {
+      UH_Htk := StrReplace(UH_Htk, Mod, "")
+      LMod := LiteralMod
+      break
+    }
+  }
+  
   if (LMod) {
     SendInput, {%LMod% Down}{%UH_Htk%}{%LMod% Up}
   } else {
