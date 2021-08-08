@@ -30,12 +30,13 @@ If (!ini.Coordinates.Count())
 
 OnMessage(0x111,"WM_COMMAND")
 
+Global mouseButtons = ["LButton", "RButton", "MButton", "WheelUp", "WheelDown", "XButton1", "XButton2", "WheelLeft", "WheelRight"]
 Global Guihwnd := "InstantHotkey"
 Gui, %Guihwnd%:New
 
 Gui, Add, Button, w40 vPosEvent0 gAutoCoords Section, AutoCoords
 Gui, Add, Text, yp+40, Coordinates
-Gui, Add, Edit, xs vPos0 gCalcPos W75 Section hide, x0 y0
+Gui, Add, Edit, xs vPos0 W75 Section hide, x0 y0
 ; Create coords GUI
 Loop 9 {
   Gui, Add, Text, xs Section, %A_Index%
@@ -56,7 +57,14 @@ Title = %Title%
 
 ; Load values from store
 For num, htk in ini["Hotkeys"] {
-		Gui, Add, Hotkey, xs vTrigger_htk%num% gTrigger_htk, %htk%
+		Gui, Add, Hotkey, xs Section vTrigger_htk%num% gTrigger_htk, %htk%
+    Gui, Add, Text, ys vtHtkText%num% w75,
+    Loop % mouseButtons.Count() {
+      if (htk == mouseButtons[A_Index]) {
+        GuiControl, %Guihwnd%:, tHtkText%num%, %htk%
+      }
+    }
+    ; if this htk contains mouse btns, guicontrol this htk
 		Hotkey, ~%htk%, Zbieraczka, On
     ini["Hotkeys"][num] := htk
 }
@@ -96,10 +104,13 @@ InstantHotkeyGuiClose:
 return
 
 Add_htk:
+  Gui, Margin, 10, 5
 	ini["Hotkeys"].Push("F2")
 	ln := ini["Hotkeys"].Count()
-	Gui, Add, Hotkey, xs vTrigger_htk%ln% gTrigger_htk
-	Gui, Show, AutoSize
+	Gui, Add, Hotkey, xs Section vTrigger_htk%ln% gTrigger_htk
+  Gui, Add, Text, ys vtHtkText%ln% w75,
+  Gui, Margin, 100, 5
+	Gui, Show, AutoSize xCenter
 return
 
 Rem_htk:
@@ -124,11 +135,15 @@ HotkeyCtrlHasFocus() {
   *PgDn::
   *Home::
   *End::
+  *LButton::
+  *RButton:: 
   *MButton::
   *XButton1::
   *XButton2::
   *WheelDown::
   *WheelUp::
+  *WheelLeft::
+  *WheelRight::
      modifier := ""
     If GetKeyState("Shift","P")
       modifier .= "+"
@@ -138,8 +153,12 @@ HotkeyCtrlHasFocus() {
       modifier .= "!"
     num := SubStr(ctrl,ctrl.length - 1)
     Key := modifier SubStr(A_ThisHotkey,2)
-    GuiControl, %Guihwnd%:, %ctrl%, % Key
-    MsgBox, %Key%
+    GuiControl, %Guihwnd%:, %ctrl%, % Key  
+    Loop % mouseButtons.Count() {
+      if (Key == mouseButtons[A_Index]) {
+        GuiControl, %Guihwnd%:, tHtkText%num%, % Key
+      }
+    }
     SetZbieraczkaHotkey(num, Key)
   return
 #If
@@ -180,12 +199,21 @@ SetZbieraczkaHotkey(num, key) {
     oldHtk := ini["Hotkeys"][num]
 		Hotkey, %oldHtk%, Zbieraczka, Off        ;     turn the old hotkey off
 		ini["Hotkeys"][num] := false        ;     add the word 'OFF' to display in a message.
+    Loop % mouseButtons.Count() {
+      if (oldHtk == mouseButtons[A_Index]) {
+        GuiControl, %Guihwnd%:, tHtkText%num%,
+      }
+    }
  	}
 
   if (!dup) {
     Hotkey, ~%Key%, Zbieraczka, On
     ini["Hotkeys"][num] := key
-    ;savedHK%num% := key
+    Loop % mouseButtons.Count() {
+      if (Key == mouseButtons[A_Index]) {
+        GuiControl, %Guihwnd%:, tHtkText%num%, %key%
+      }
+    }
     WinActivate, Program Manager ; lose focus
   }
 }
@@ -203,10 +231,6 @@ SelectCoords:
   Global numx := SubStr(A_GuiControl,A_GuiControl.length - 1)
 	SetTimer, WatchCursor, 20
 return
-
-CalcPos:
-  ;CalcPositions()
-Return
 
 UpdateCoords:
 return
@@ -330,6 +354,8 @@ ShowCircle(index, clr := "0x00FF49") {
   GuiControlGet, coords, %Guihwnd%:, Pos%index%
   If (coords = "") {
     return
+  } else if (coords = "x0 y0") {
+    return
   }
   coords := StripXYcoords(coords)
   cx := coords[1]
@@ -352,6 +378,8 @@ FlashCircles(ms) {
   Loop 9 {
     ShowCircle(A_Index)
   }
+  if (CircleHWNDs.Count() == 0)
+    Return
   Sleep %ms%
   Loop 9 {
     HideCircle(A_Index)
