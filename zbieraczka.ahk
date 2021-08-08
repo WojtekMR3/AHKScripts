@@ -138,9 +138,8 @@ HotkeyCtrlHasFocus() {
       modifier .= "!"
     num := SubStr(ctrl,ctrl.length - 1)
     Key := modifier SubStr(A_ThisHotkey,2)
-    MsgBox, %Key%
     GuiControl, %Guihwnd%:, %ctrl%, % Key
-    GuiControl, %Guihwnd%:, %ctrl%, End
+    MsgBox, %Key%
     SetZbieraczkaHotkey(num, Key)
   return
 #If
