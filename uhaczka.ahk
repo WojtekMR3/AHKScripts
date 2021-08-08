@@ -175,7 +175,9 @@ SetZbieraczkaHotkey(num, key) {
 
 Uhaczka:
   ;MsgBox, , , uhaczka, 0.3
-  if WinActive("Tibia -")
+  if !(WinActive("Tibia -")) {
+    return
+  }
 	sleep 35 ; fix for low
 	GuiControlGet, coords ,, TankerPos
 	GuiControlGet, UH_Htk ,, UH_hotkey
