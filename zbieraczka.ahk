@@ -191,7 +191,10 @@ SetZbieraczkaHotkey(num, key) {
 
 AutoCoords:
   MsgBox, , , Select character position, 0.8
+  WinGetPos, X, Y, W, H, Tibia
+  MsgBox, Calculator is at %X%`,%Y% and its size is %W%x%H%
   Goto, SelectCoords
+  
 Return
 
 SelectCoords:
