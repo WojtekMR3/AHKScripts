@@ -135,7 +135,6 @@ HotkeyCtrlHasFocus() {
   *PgDn::
   *Home::
   *End::
-  *LButton::
   *RButton:: 
   *MButton::
   *XButton1::
@@ -220,10 +219,7 @@ SetZbieraczkaHotkey(num, key) {
 
 AutoCoords:
   MsgBox, , , Select character position, 0.8
-  WinGetPos, X, Y, W, H, Tibia
-  MsgBox, Calculator is at %X%`,%Y% and its size is %W%x%H%
   Goto, SelectCoords
-  
 Return
 
 SelectCoords:
@@ -321,8 +317,9 @@ makeCircle(color, r := 150, thickness := 10, transparency := 254, posx := 0, pos
 	DllCall("SetWindowRgn", "UInt", HWND, "UInt", outer, "UInt", true)
   offset := 6
   halfr := r/2
-  posx := posx-halfr-offset
-  posy := posy-halfr-offset
+  WinGetPos, Xoff, Yoff, W, H, Tibia
+  posx := posx-halfr+Xoff
+  posy := posy-halfr+Yoff
 	Gui %HWND%:Color, % color
   Gui %HWND%:Font, s8 w600,
   Gui %HWND%:Add, Text, cDefault, %i%
