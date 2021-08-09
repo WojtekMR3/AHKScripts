@@ -44,7 +44,7 @@ SB_SetText("AutoUH by Frostspiked", 1)
 For num, htk in ini["UhaczkaHotkeys"] {
 		Gui, Add, Hotkey, xs vTrigger_htk%num% gTrigger_htk, %htk%
 		Hotkey, ~%htk%, Uhaczka, On
-		ini["Hotkeys"][num] := htk
+		ini["UhaczkaHotkeys"][num] := htk
 }
 
 ; Load values from store
@@ -55,6 +55,7 @@ GuiControl, Text, UH_hotkey, % ini["Singular"].uh_htk
 ; Remove '.exe' from title
 Title := StrReplace(A_ScriptName, .exe, " ")
 Title = %Title%
+Gui, Margin, 100, 5
 Gui, Show, AutoSize, %Title%
 
 OnExit("SaveCache")
@@ -82,10 +83,13 @@ GuiClose:
 return
 
 Add_htk:
+  Gui, Margin, 10, 5
 	ini["UhaczkaHotkeys"].Push("F2")
 	ln := ini["UhaczkaHotkeys"].Count()
-	Gui, Add, Hotkey, xs vTrigger_htk%ln% gTrigger_htk
-	Gui, Show, AutoSize
+	Gui, Add, Hotkey, xs Section vTrigger_htk%ln% gTrigger_htk
+  Gui, Add, Text, ys vtHtkText%ln% w75,
+  Gui, Margin, 100, 5
+	Gui, Show, AutoSize xCenter
 return
 
 Rem_htk:
@@ -110,11 +114,14 @@ HotkeyCtrlHasFocus() {
   *PgDn::
   *Home::
   *End::
+  *RButton:: 
   *MButton::
   *XButton1::
   *XButton2::
   *WheelDown::
   *WheelUp::
+  *WheelLeft::
+  *WheelRight::
      modifier := ""
     If GetKeyState("Shift","P")
       modifier .= "+"
@@ -124,8 +131,13 @@ HotkeyCtrlHasFocus() {
       modifier .= "!"
     num := SubStr(ctrl,ctrl.length - 1)
     Key := modifier SubStr(A_ThisHotkey,2)
-    GuiControl, , %ctrl%, % Key
-    SetZbieraczkaHotkey(num, Key)
+    GuiControl, , %ctrl%, % Key  
+    Loop % mouseButtons.Count() {
+      if (Key == mouseButtons[A_Index]) {
+        GuiControl, , tHtkText%num%, % Key
+      }
+    }
+    SetHotkey(num, Key)
   return
 #If
 
@@ -135,14 +147,14 @@ Trigger_htk:
 		return
 	num := SubStr(A_GuiControl,A_GuiControl.length - 1)
   Key := % %A_GuiControl%
-  SetZbieraczkaHotkey(num, Key)
+  SetHotkey(num, Key)
 return
 
-SetZbieraczkaHotkey(num, key) {
-  ln := ini["Hotkeys"].Count()
+SetHotkey(num, key) {
+  ln := ini["UhaczkaHotkeys"].Count()
   
   Loop % ln {
-    if (key = ini["Hotkeys"][A_Index]) {
+    if (key = ini["UhaczkaHotkeys"][A_Index]) {
       
       dup := A_Index
       ; If duplicate hotkey is blank, do not alert it to user
@@ -161,16 +173,25 @@ SetZbieraczkaHotkey(num, key) {
     }
   }
 
-	If (ini["Hotkeys"][num]) { ;If a hotkey was already saved...
-    oldHtk := ini["Hotkeys"][num]
+	If (ini["UhaczkaHotkeys"][num]) { ;If a hotkey was already saved...
+    oldHtk := ini["UhaczkaHotkeys"][num]
 		Hotkey, %oldHtk%, Uhaczka, Off        ;     turn the old hotkey off
-		ini["Hotkeys"][num] := false        ;     add the word 'OFF' to display in a message.
+		ini["UhaczkaHotkeys"][num] := false        ;     add the word 'OFF' to display in a message.
+    Loop % mouseButtons.Count() {
+      if (oldHtk == mouseButtons[A_Index]) {
+        GuiControl, , tHtkText%num%,
+      }
+    }
  	}
 
   if (!dup) {
     Hotkey, ~%Key%, Uhaczka, On
-    ini["Hotkeys"][num] := key
-    ;savedHK%num% := key
+    ini["UhaczkaHotkeys"][num] := key
+    Loop % mouseButtons.Count() {
+      if (Key == mouseButtons[A_Index]) {
+        GuiControl, , tHtkText%num%, %key%
+      }
+    }
     WinActivate, Program Manager ; lose focus
   }
 }
