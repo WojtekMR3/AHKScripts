@@ -15,6 +15,7 @@ cachePth = %A_ScriptFullPath%:Stream:$DATA
 Global cachePath := cachePth
 Global ini := ReadINI(cachePath)
 Global Modifiers := {"Alt": "!", "Ctrl": "^", "Shift": "+"}
+Global mouseButtons = ["LButton", "RButton", "MButton", "WheelUp", "WheelDown", "XButton1", "XButton2", "WheelLeft", "WheelRight"]
 
 if (!ini.Singular.count()) {
 	ini.Singular := IniSections.Singular.Clone()
@@ -42,14 +43,20 @@ Gui, Add, StatusBar,,
 SB_SetText("AutoUH by Frostspiked", 1)
 
 For num, htk in ini["UhaczkaHotkeys"] {
-		Gui, Add, Hotkey, xs vTrigger_htk%num% gTrigger_htk, %htk%
+		Gui, Add, Hotkey, xs Section vTrigger_htk%num% gTrigger_htk, %htk%
+    Gui, Add, Text, ys vtHtkText%num% w75,
+    Loop % mouseButtons.Count() {
+      if (htk == mouseButtons[A_Index]) {
+        GuiControl,, tHtkText%num%, %htk%
+      }
+    }
 		Hotkey, ~%htk%, Uhaczka, On
 		ini["UhaczkaHotkeys"][num] := htk
 }
 
 ; Load values from store
 GuiControl, Text, TankerPos, % ini["Singular"].pos
-GuiControl, Move, TankerPos, W300
+GuiControl, Move, TankerPos, W100
 GuiControl, Text, UH_hotkey, % ini["Singular"].uh_htk
 
 ; Remove '.exe' from title
