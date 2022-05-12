@@ -10,6 +10,9 @@ SetMouseDelay, -1
 SetWorkingDir %A_ScriptDir%
 
 Global IniSections := []
+Global IniSections ["Singular"] 
+:= { controlsChoice: "Classic Controls"
+	,	secondaryControlsChoice: "Shift + Right" }
 Global IniSections ["Coordinates"] := {}
 Global IniSections ["Hotkeys"] := {}
 
@@ -17,6 +20,12 @@ cachePth = %A_ScriptFullPath%:Stream:$DATA
 Global cachePath := cachePth
 Global ini := ReadINI(cachePath)
 Global CircleHWNDs := {}
+
+if (!ini.Singular.count()) {
+	ini.Singular := IniSections.Singular.Clone()
+	ini.Singular.controlsChoice := IniSections.Singular.controlsChoice
+	ini.Singular.secondaryControlsChoice := IniSections.Singular.secondaryControlsChoice
+}
 
 If (!ini.Hotkeys.Count())
 {
@@ -34,7 +43,16 @@ Global mouseButtons = ["LButton", "RButton", "MButton", "WheelUp", "WheelDown", 
 Global Guihwnd := "InstantHotkey"
 Gui, %Guihwnd%:New
 
-Gui, Add, Button, w40 vPosEvent0 gAutoCoords Section, AutoCoords
+Gui, Add, DropDownList, gControlsChange vControlsChoice Choose1 Section, Classic Controls|Regular Controls|Left Smart-Click
+Gui, Add, DropDownList, w90 ys vClassicCtrlLootChoice Choose1 Disabled, Shift + Right|Right|Left
+
+GuiControl, Choose, ControlsChoice, % ini["Singular"].controlsChoice
+if (ini["Singular"].controlsChoice = "Classic Controls") {
+	GuiControl, %Guihwnd%:Enable, ClassicCtrlLootChoice
+}
+GuiControl, Choose, ClassicCtrlLootChoice, % ini["Singular"].secondaryControlsChoice
+
+Gui, Add, Button, w40 xs vPosEvent0 gAutoCoords Section, AutoCoords
 Gui, Add, Text, yp+40, Coordinates
 Gui, Add, Edit, xs vPos0 W75 Section hide, x0 y0
 ; Create coords GUI
@@ -81,8 +99,17 @@ FlashCircles(3000)
 OnExit("SaveCache")
 return
 
+~F10::
+	Reload
+return
+
 SaveCache(ExitReason, ExitCode)
 {
+	GuiControlGet, val, %Guihwnd%:, ControlsChoice
+	IniSections["Singular"].controlsChoice := val
+	GuiControlGet, val, %Guihwnd%:, ClassicCtrlLootChoice
+	IniSections["Singular"].secondaryControlsChoice := val
+
 	; Retrieve all hotkey binds.
 	Loop % ini["Hotkeys"].Count() {
 		GuiControlGet, htk , %Guihwnd%:, Trigger_htk%A_Index%
@@ -234,20 +261,54 @@ return
 Zbieraczka:
   ;MsgBox, , , Zbiera, 0.3
   Sleep 25
+  
   if !(WinActive("Tibia -")) {
     return
   }
-
+  
+	GuiControlGet, controls, %Guihwnd%:, ControlsChoice
+	mb := "Right"
+	htkDown := "Shift Down"
+	htkUp := "Shift Up"
+	delay := 0
+  if (controls = "Classic Controls") {
+	  GuiControlGet, classicCtrl, %Guihwnd%:, ClassicCtrlLootChoice
+	  if (classicCtrl = "Right") {
+		htkDown := ""
+		htkUp := ""
+		delay := 100
+	  } else if (classicCtrl = "Left") {
+		htkDown := ""
+		htkUp := ""
+		mb := "Left"
+		delay := 100
+	  }
+  } else if (controls = "Left Smart-Click") {
+		suppHtk := "Alt"
+		htkDown := "Alt Down"
+		htkUp := "Alt Up"
+		mb := "Left"
+  }
   BlockInput, On
-  SendInput {Shift Down}
+  SendInput {%htkDown%}
   Sleep 10
   Loop 9 {
     GuiControlGet, coordsPair, %Guihwnd%:, Pos%A_Index%
-    ControlClick, %coordsPair%, Tibia ,,Right
+    ControlClick, %coordsPair%, Tibia ,,%mb%
+	Sleep %delay%
   }
   Sleep 10
-  SendInput {Shift Up}
+  SendInput {%htkUp%}
   BlockInput, Off
+return
+
+ControlsChange:
+	GuiControlGet, controls2, %Guihwnd%:, ControlsChoice
+	if (controls2 = "Classic Controls") {
+		GuiControl, %Guihwnd%:Enable, ClassicCtrlLootChoice 
+	} else {
+		GuiControl, %Guihwnd%:Disable, ClassicCtrlLootChoice 
+	}
 return
 
 WatchCursor:
