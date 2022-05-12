@@ -1,3 +1,0 @@
-Here are some examples of common mistakes.
-
-Look at the comments inside the files.

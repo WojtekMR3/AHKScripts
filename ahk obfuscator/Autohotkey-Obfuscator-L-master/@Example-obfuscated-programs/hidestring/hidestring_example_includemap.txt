@@ -1,1 +1,0 @@
-hidestring_example.ahk
