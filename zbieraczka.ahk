@@ -99,10 +99,6 @@ FlashCircles(3000)
 OnExit("SaveCache")
 return
 
-~F10::
-	Reload
-return
-
 SaveCache(ExitReason, ExitCode)
 {
 	GuiControlGet, val, %Guihwnd%:, ControlsChoice
