@@ -32,6 +32,7 @@ Global IniSections ["Singular"]
 	,	actionHtk: "f1"
 	,	htk: "f3"
 	, 	delay: 40
+	, 	exhaust: 180
 	,	guiHudCoords: "x200 y100"
 	, 	HUDfontSize: 18
 	,	HUDtransparency: 70
@@ -51,6 +52,7 @@ if (!ini.Singular.count()) {
 	ini.Singular.actionHtk := IniSections.Singular.actionHtk
 	ini.Singular.htk := IniSections.Singular.htk
 	ini.Singular.delay := IniSections.Singular.delay
+	ini.Singular.exhaust := IniSections.Singular.exhaust
 	ini.Singular.guiHudCoords := IniSections.Singular.guiHudCoords
 	ini.Singular.HUDfontSize := IniSections.Singular.HUDfontSize
 	ini.Singular.HUDtransparency := IniSections.Singular.HUDtransparency
@@ -90,6 +92,9 @@ Gui, %MainGui%:Add, Hotkey, gSetScriptHotkey vSwitchHtk w75 ys, F2
 
 Gui, %MainGui%:Add, Text, xs Section, Delay:
 Gui, %MainGui%:Add, Edit, gDelayEv vDelay w35 ys, % ini["Singular"].delay
+
+Gui, %MainGui%:Add, Text, xs Section, Exhaust:
+Gui, %MainGui%:Add, Edit, vExhaust w35 ys, % ini["Singular"].exhaust
 
 Gui, %MainGui%:Add, Text, xs Section, HUD font size:
 Gui, %MainGui%:Add, Edit, vHUDFontSize gHUDFontChange ys w35, % ini["Singular"].HUDfontSize
@@ -213,7 +218,7 @@ WatchCursor:
 return
 
 AutoSS:
-	if !(WinActive("ahk_exe client.exe")) {
+	if !(WinActive("Tibia -")) {
 		return
 	}
 	GuiControlGet, Coords, %MainGui%:, Coords1
@@ -235,7 +240,8 @@ AutoSS:
 				GuiControlGet, htk, %MainGui%:, ScriptHtk
 				ControlSend,, {%htk%}, Tibia -
 			}
-			Sleep 180
+			GuiControlGet, exh , %MainGui%:, Exhaust
+			Sleep %exh%
 		}
 	} else if (inverse = 1) {
 		if (tColor != obsColor) {
@@ -246,7 +252,8 @@ AutoSS:
 				GuiControlGet, htk, %MainGui%:, ScriptHtk
 				ControlSend,, {%htk%}, Tibia -
 			}
-			Sleep 180
+			GuiControlGet, exh , %MainGui%:, Exhaust
+			Sleep %exh%
 		}
 	}
 return
@@ -297,11 +304,13 @@ MsgBox,
 
 2. Delay: Delay after each pixel color check, less delay - quicker the script - more cpu usage. Recommended value 10-100.
 
-3. Show scans: Shows amount of pixel checks for each second.
+3. Exhaust: Wait time after each succesful action usage. Value ~180 for ssa/might ring/eq. Value ~500-1000 for healing.
 
-4. Home - Reload all scripts.
+4. Show scans: Shows amount of pixel checks for each second.
 
-5. End - Exit all scripts.
+5. Home - Reload all scripts.
+
+6. End - Exit all scripts.
 )
 return
 
@@ -372,9 +381,10 @@ WM_LBUTTONDOWN()
 }
 
 isTibiaActive() {
-	if (WinActive("ahk_exe client.exe") or WinActive("ahk_class AutoHotkeyGUI")) and !(WinExist(HUD)) {
+	WinGetActiveTitle, ActWTitle
+	if (WinActive("Tibia") or WinActive("ahk_class AutoHotkeyGUI")) and !(WinExist(HUD)) and !(InStr(ActWTitle, "Google Chrome")) {
 		Gui %HUD%:Show, NoActivate
-	} else if !(WinActive("ahk_exe client.exe") or WinActive("ahk_class AutoHotkeyGUI")) {
+	} else if !(WinActive("Tibia") or WinActive("ahk_class AutoHotkeyGUI")) or InStr(ActWTitle, "Google Chrome") {
 		Gui %HUD%:Hide
 	}
 }
@@ -424,6 +434,9 @@ SaveCache(ExitReason, ExitCode)
 	
 	GuiControlGet, delay , %MainGui%:, Delay
 	IniSections["Singular"].delay := delay
+	
+	GuiControlGet, exh , %MainGui%:, Exhaust
+	IniSections["Singular"].exhaust := exh
 
 	GuiControlGet, val , %MainGui%:, HUDFontSize
 	IniSections["Singular"].HUDfontSize := val
