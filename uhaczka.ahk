@@ -5,224 +5,195 @@ SendMode Input  ; Recommended for new scripts due to its superior speed and reli
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 SetControlDelay -1
 SetBatchLines, -1
+SetMouseDelay, -1
 
 tempVal = %A_ScriptFullPath%:Stream:$DATA
 Global cachePath := tempVal
 Global Modifiers := {"Alt": "!", "Ctrl": "^", "Shift": "+"}
 Global mouseButtons = ["LButton", "RButton", "MButton", "WheelUp", "WheelDown", "XButton1", "XButton2", "WheelLeft", "WheelRight"]
+Global kbdKeys = ["Delete", "Escape", "Space", "Tab", "PgUp", "PgDn", "Home", "End"]
 
 IniRead, res, %cachePath%, CacheSection, Settings
 if (res = "ERROR") {
-  Global ob2 := {1: {tabName: "ek", uhHotkey: "F12", coords: "x1337, y500", hotkeys: ["F6"]}, 2: {tabName: "rp"
-  , uhHotkey: "F12", coords: "x800, y250", hotkeys: ["F7"]}}
+  Global settings := {tabs: {"Elite Knight": {coords: "x10, y10", hotkeys: ["F4"]}, "Royal Paladin": {coords: "x20, y20", hotkeys: []}}
+  , globals: {pauseHot: "F1", reloadHot: "F2", closeHot: "F3", uhHotkey: "F12", guiPos: "x0 y0"}}
 } else {
-  Global ob2 := JSON.load(res)
+  Global settings := JSON.load(res)
 }
 
-OnMessage(0x111,"WM_COMMAND")
-;arr2 := [{tabName: "ek", coords: "x0, y0", hotkeys: [5, 6, 7, 8]}, {tabName: "rp", coords: "x0, y0", hotkeys: ["f2", "f3", 7, 8]}]
-arr2 := {tabs: [{tabName: "ek", coords: "x0, y0", hotkeys: [5, 6, 7, 8]}, {tabName: "rp", coords: "x0, y0", hotkeys: ["f2", "f3", 7, 8]}], settings: {pauseHot: "F1", reloadHot: "F2", closeHot: "F3"}}
-For key in arr2.tabs {
-  MsgBox, % arr2.tabs[key].tabName
-}
-;MsgBox, % Obj2Str(ob2)
+;MsgBox, % Obj2Str(arr2)
 
-; For key, in ob2 {
-; 	MsgBox, % key
-; 	For i, in ob2[key].hotkeys {
-; 		MsgBox, % ob2[key].hotkeys[i]
-; 	}
-; }
-;MsgBox, % arr2[1].tabName
-Gui, Add, Button, Section gNewTab, New tab
-Gui, Add, Text, ys W50
+rowC := settings.tabs.Count()
+if (rowC <= 5) {
+  LrowC := 5 
+} else {
+  LrowC := settings.tabs.Count() + 1
+}
+Gui, Add, ListView, Section r%LrowC% w150 -Multi vLVtabs, Name
+For tab in settings.tabs {
+  LV_Add(, tab)
+}
+LV_ModifyCol(1, Auto)
+
+Gui, Add, GroupBox, xp+160 yp w100 h115, Tab Editor
+Gui, Add, Button, xp+10 yp+20 w80 gNewTab, New tab
+Gui, Add, Button, xp yp+30 w80 gRenameTab, Rename tab
+Gui, Add, Button, xp yp+30 w80 gDeleteTab, Delete tab
+
+Gui, Margin, 10, 15
+
+Gui, Add, Text, xs Section, UH Rune Hotkey in game ; The ym option starts a new column of controls.
+uhHtk := settings.globals.uhHotkey
+Gui, Add, Hotkey, ys vUhRune_hotkey, %uhHtk%
+
+Gui, Margin, 10, 5
 
 tabNames := ""
-For key, in ob2 {
-  tabNames := tabNames . ob2[key].tabName . "|"
+For tab, in settings.tabs {
+  tabNames := tabNames . tab . "|"
 }
 tabNames := SubStr(tabNames, 1, StrLen(tabNames) - 1)
 
 Gui, Add, Tab3, xs Section vAutoUHTabs, %tabNames%
-For key, in ob2 {
-	Gui, Tab, %A_Index%
-	
-  Gui, Add, GroupBox, Section w160 h60, Tab Edit
-  Gui, Add, Button, xp+10 yp+20 gRenameTab, Rename tab
-  Gui, Add, Button, xp+80 yp gDeleteTab, Delete tab
+For tab, in settings.tabs {
+  ;tabI := tab
+  tabI := A_Index
+	Gui, Tab, %tabI%
 
-	Gui, Add, Text, xs Section, UH Rune Hotkey in game ; The ym option starts a new column of controls.
-	Gui, Add, Hotkey, ys vUH_hotkey%key% gUhRuneChange, % ob2[key].uhHotkey
-	
-	Gui, Add, Button, xs Section w133 gSelectCoords vPixelBtn%key%, Select target position
-	Gui, Add, Text, ys yp+5 vTankerPos%key% W80, % ob2[key].coords
+	Gui, Add, Button, Section w133 gSelectCoords vPixelBtn%tabI%, Select target position
+	Gui, Add, Text, ys yp+5 vTankerPos%tabI% W80, % settings.tabs[tab].coords
 
 	Gui, Add, Text, xs yp+40 Section, AutoUH Hotkeys.
 	Gui, Add, Button, w40 gAdd_htk Section, Add
 	Gui, Add, Button, w60 gRem_htk ys, Remove
 	
-	For i, in ob2[key].hotkeys {
-		htk2 := ob2[key].hotkeys[i]
-		Gui, Add, Hotkey, xs Section vTrigger_htk%key%%i% gTrigger_htk, %htk2%
-		Gui, Add, Text, ys vtHtkText%key%%i% w75,
+	For i, in settings.tabs[tab].hotkeys {
+		htk := settings.tabs[tab].hotkeys[i]
+		Gui, Add, Hotkey, xs Section vTrigger_htk%tabI%_%i% gTrigger_htk, %htk%
+		Gui, Add, Text, ys vtHtkText%tabI%_%i% w75,
 	 	Loop % mouseButtons.Count() {
-		  if (htk2 == mouseButtons[A_Index]) {
-			GuiControl, , tHtkText%key%, %htk2%
+		  if (htk == mouseButtons[A_Index]) {
+			GuiControl, , tHtkText%tabI%_%i%, %htk%
 		  }
 		}
-		Hotkey, ~%htk2%, Uhaczka, On
+		Hotkey, ~%htk%, Uhaczka, On
 	}
 }
 
 Gui, Add, StatusBar,,
 SB_SetText("AutoUH by Frostspiked", 1)
 
-; Remove '.exe' from title
-Title := StrReplace(A_ScriptName, .exe, " ")
-Title = %Title%
+; Remove '.ahk' from title
+;Global Title := StrReplace(A_ScriptName, .ahk, " ")
+Global Title = A_ScriptName
 Gui, Margin, 10, 5
-Gui, Show, AutoSize, %Title%
+guiPos := settings.globals.guiPos
+guiPos := guiPosVerify(guiPos)
+Gui, Show, %guiPos% AutoSize, %Title%
 
 OnExit("SaveCache")
 return
 
-;~Insert::Suspend
-~Home::Reload
-;~End::ExitApp
+~^s::
+    if WinExist("ahk_exe Code.exe") or WinExist("ahk_class Notepad++") {
+      Reload
+    }
+return
+
+~End::
+    if WinExist("ahk_exe Code.exe") or WinExist("ahk_class Notepad++") {
+      ExitApp
+    }
+return
 
 GuiClose:
 	ExitApp
 return
 
 NewTab:
-  if (ob2.Count() >= 9) {
-    MsgBox, You can't have more than 9 tabs!
+  len := settings.tabs.Count()+1
+  InputBox, tabName, New tab, (New tab name),,220,150,,,,, ek%len% 
+
+ if (ErrorLevel != 0) {
+    return
+ }
+
+ if (StrLen(tabName) = 0) {
+    MsgBox, Tab name is empty!
+    return
+ }
+
+  if (settings.tabs.HasKey(tabName)) {
+    MsgBox, Tab name exists!
     return
   }
-  newName := ob2.Count()+1
-  InputBox, tabName, New tab, (New tab name),,220,150,,,,, ek%newName% 
-  nameDup := false
-  For key, in ob2 {
-    if (ob2[key].tabName = tabName) {
-      nameDup := True
-      break
-    }
-  }
-  ; check if name isnt blank and if it already exists
-  if (StrLen(tabName) = 0 or (nameDup = true) and (ErrorLevel = 0)) {
-     MsgBox, Tab name is either empty or already exists!
-     return
-  }
-  if (ErrorLevel > 0) {
-    return
-  }
-  ob2.push({tabName: tabName, uhHotkey: "f12", coords: "x1190, y500", hotkeys: []})
+
+  settings.tabs[tabName] := {coords: "x0, y0", hotkeys: []}
   Gosub, redrawGUIlabel
   GuiControl, ChooseString, AutoUHTabs, %tabName%
 return
 
 RenameTab:
-  GuiControlGet, actTab , , AutoUHTabs
-  InputBox, tabName, New tab, (New tab name),,220,150,,,,, %actTab%
-  ; check if new tab name already exists
-  nameDup := false
-  For key, in ob2 {
-    if (ob2[key].tabName = tabName) {
-      nameDup := True
-      break
-    }
-  }
-  ; check if name isnt blank and if it already exists
-  if (StrLen(tabName) = 0 or (nameDup = true) and (ErrorLevel = 0)) {
-     MsgBox, Tab name is either empty or already exists!
-     return
-  }
-  if (ErrorLevel > 0) {
+  rn := LV_GetNext()
+  if (rn = 0) {
+    MsgBox, select tab to edit!
     return
   }
-
-  ; Search for the active tab key
-  For key, in ob2 {
-    if (ob2[key].tabName = actTab) {
-      ; change tab name in the object
-      ob2[key].tabName := tabName
-      break
-    }
+  LV_GetText(actTab, rn)
+  ;GuiControlGet, actTab , , AutoUHTabs
+  InputBox, newTname, New tab, (New tab name),,220,150,,,,, %actTab%
+  if (ErrorLevel != 0) {
+      return
   }
+
+  if (StrLen(newTname) = 0) {
+      MsgBox, Tab name is empty!
+      return
+  }
+
+  if (settings.tabs.HasKey(newTname)) {
+    MsgBox, Tab name exists!
+    return
+  }
+  settings.tabs[newTname] := settings.tabs[actTab]
+  settings.tabs.Delete(actTab)
   Gosub, redrawGUIlabel
-  GuiControl, ChooseString, AutoUHTabs, %tabName%
+  GuiControl, ChooseString, AutoUHTabs, %newTname%
 return
 
 DeleteTab:
-  GuiControlGet, actTab , , AutoUHTabs
-  For key, in ob2 {
-    if (ob2[key].tabName = actTab) {
-      For i, in ob2[key].hotkeys {
-        htk := ob2[key].hotkeys[i]
-        Hotkey, ~%htk%, Uhaczka, Off
-      }
-      ob2.Delete(key)
-      break
-    }
+  rn := LV_GetNext()
+  if (rn = 0) {
+    MsgBox, select tab to edit!
+    return
   }
-  ; create array from object
-  arrayTemp := []
-  For k, in ob2 {
-    arrayTemp.push(ob2[k])
+  LV_GetText(actTab, rn)
+  ;GuiControlGet, actTab , , AutoUHTabs
+  For i, in settings.tabs[actTab].hotkeys {
+    htk := settings.tabs[actTab].hotkeys[i]
+    Hotkey, ~%htk%, Uhaczka, Off
   }
-  ob2 := {}
-  ; create new object from an array
-  For i, in arrayTemp {
-    ob2.push(arrayTemp[i])
-  }
+  settings.tabs.Delete(actTab)
   Gosub, redrawGUIlabel
-return
-
-UhRuneChange:
-  key := SubStr(A_GuiControl,A_GuiControl.length - 1)
-  GuiControlGet, htk,, %A_GuiControl%
-  ob2[key].uhHotkey := htk
 return
 
 Add_htk:
 	GuiControlGet, actTab , , AutoUHTabs
-  For key, in ob2 {
-    if (ob2[key].tabName = actTab) {
-      tabid := key
-      htkid := ob2[key].hotkeys.Count() + 1
-      break
-    }
-  }
-  if (htkid > 9) {
-    MsgBox, You can't have more than 9 hotkeys.
-    return
-  }
-	;Gui, Add, Hotkey, xs Section vTrigger_htk%tabid%%htkid% gTrigger_htk
-	;Gui, Add, Text, ys vtHtkText%tabid%%htkid% w75,
-	;GuiControl, MoveDraw, Trigger_htk%tabid%%htkid%, w75
-  ; push new hotkey into the hotkey array
-  ob2[tabid].hotkeys.Push("")
+  settings.tabs[actTab].hotkeys.Push("")
   Gosub, redrawGUIlabel
 return
 
 Rem_htk:
   GuiControlGet, actTab , , AutoUHTabs
-  For key, in ob2 {
-    if (ob2[key].tabName = actTab) {
-      tabid := key
-      htkid := ob2[key].hotkeys.Count()
-      htk := ob2[key].hotkeys[ob2[key].hotkeys.MaxIndex()]
-      ob2[key].hotkeys.Pop()
-      ; check if hotkey isnt none
-      len := StrLen(htk)
-      if (len > 0) {
-        Hotkey, ~%htk%, Uhaczka, Off
-      }
-      Gosub, redrawGUIlabel
-      ; Turn off the hotkey
-      break
-    }
+  htk := settings.tabs[actTab].hotkeys[settings.tabs[actTab].hotkeys.MaxIndex()]
+  settings.tabs[actTab].hotkeys.Pop()
+  ; check if hotkey isnt none
+  len := StrLen(htk)
+  if (len > 0) {
+    Hotkey, ~%htk%, Uhaczka, Off
   }
+  Gosub, redrawGUIlabel
+  ; Turn off the hotkey
 return
 
 redrawGUIlabel:
@@ -230,48 +201,59 @@ redrawGUIlabel:
   GuiControlGet, actTab , , AutoUHTabs
   Gui, Destroy
   
-  Gui, Add, Button, Section gNewTab, New tab
-  Gui, Add, Text, ys W50
+  rowC := settings.tabs.Count()
+  if (rowC < 5) {
+    LrowC := 5 
+  } else {
+    LrowC := settings.tabs.Count()
+  }
+  Gui, Add, ListView, Section r%LrowC% w150 -Multi vLVtabs, Name
+  For tab in settings.tabs {
+    LV_Add(, tab)
+  }
+  LV_ModifyCol(1, Auto)
+
+  Gui, Add, GroupBox, xp+160 yp w100 h115, Tab Editor
+  Gui, Add, Button, xp+10 yp+20 w80 gNewTab, New tab
+  Gui, Add, Button, xp yp+30 w80 gRenameTab, Rename tab
+  Gui, Add, Button, xp yp+30 w80 gDeleteTab, Delete tab
+
+  Gui, Add, Text, xs Section, UH Rune Hotkey in game ; The ym option starts a new column of controls.
+  Gui, Add, Hotkey, ys vUhRune_hotkey, F12
 
   tabNames := ""
-  For key, in ob2 {
-    tabNames := tabNames . ob2[key].tabName . "|"
+  For tab, in settings.tabs {
+    tabNames := tabNames . tab . "|"
   }
   tabNames := SubStr(tabNames, 1, StrLen(tabNames) - 1)
 
   Gui, Add, Tab3, xs Section vAutoUHTabs, %tabNames%
   GuiControl, ChooseString, AutoUHTabs, %actTab%
-  For key, in ob2 {
-    Gui, Tab, %A_Index%
+  For tab, in settings.tabs {
+    tabI := A_Index
+    Gui, Tab, %tabI%
 
-    Gui, Add, GroupBox, Section w160 h60, Tab Edit
-    Gui, Add, Button, xp+10 yp+20 gRenameTab, Rename tab
-    Gui, Add, Button, xp+80 yp gDeleteTab, Delete tab
-
-    Gui, Add, Text, xs Section, UH Rune Hotkey in game ; The ym option starts a new column of controls.
-    Gui, Add, Hotkey, ys vUH_hotkey%key% gUhRuneChange, % ob2[key].uhHotkey
-    
-    Gui, Add, Button, xs Section w133 gSelectCoords vPixelBtn%key%, Select target position
-    Gui, Add, Text, ys yp+5 vTankerPos%key% W90, % ob2[key].coords
+    Gui, Add, Button, Section w133 gSelectCoords vPixelBtn%tabI%, Select target position
+    Gui, Add, Text, ys yp+5 vTankerPos%tabI% W80, % settings.tabs[tab].coords
 
     Gui, Add, Text, xs yp+40 Section, AutoUH Hotkeys.
     Gui, Add, Button, w40 gAdd_htk Section, Add
     Gui, Add, Button, w60 gRem_htk ys, Remove
     
-    For i, in ob2[key].hotkeys {
-      htk2 := ob2[key].hotkeys[i]
-      Gui, Add, Hotkey, xs Section vTrigger_htk%key%%i% gTrigger_htk, %htk2%
-      Gui, Add, Text, ys vtHtkText%key%%i% w75,
+    For i, in settings.tabs[tab].hotkeys {
+      htk := settings.tabs[tab].hotkeys[i]
+      Gui, Add, Hotkey, xs Section vTrigger_htk%tabI%_%i% gTrigger_htk, %htk%
+      Gui, Add, Text, ys vtHtkText%tabI%_%i% w75,
       Loop % mouseButtons.Count() {
-        if (htk2 == mouseButtons[A_Index]) {
-        GuiControl,, tHtkText%key%, %htk2%
+        if (htk == mouseButtons[A_Index]) {
+        GuiControl, , tHtkText%tabI%_%i%, %htk%
         }
       }
-      Hotkey, ~%htk2%, Uhaczka, On
+      Hotkey, ~%htk%, Uhaczka, On
     }
   }
   Gui, Margin, 10, 5
-  Gui, Show, Y%posY% AutoSize, %Title%
+  Gui, Show, AutoSize X%posX% Y%posY%, %Title%
 return
 
 HotkeyCtrlHasFocus() {
@@ -306,13 +288,11 @@ HotkeyCtrlHasFocus() {
       modifier .= "^"
     If GetKeyState("Alt","P")
       modifier .= "!"
-    num := SubStr(ctrl,ctrl.length - 1)
+    num := StrReplace(ctrl, "Trigger_htk", "")
     Key := modifier SubStr(A_ThisHotkey,2)
-    GuiControl, , %ctrl%, % Key  
-    Loop % mouseButtons.Count() {
-      if (Key == mouseButtons[A_Index]) {
-        GuiControl, , tHtkText%num%, % Key
-      }
+    if (HasVal(mouseButtons, key) > 0) { 
+      textControl := StrReplace(ctrl, "Trigger_htk", "tHtkText")
+      GuiControl, , %textControl%, % Key
     }
     SetHotkey(num, Key)
   return
@@ -322,24 +302,24 @@ HotkeyCtrlHasFocus() {
 Trigger_htk:
 	If %A_GuiControl%  in +,!,^,+^,+!,^!,+^!            ;If the hotkey contains only modifiers, return to wait for a key.
 		return
-	num := SubStr(A_GuiControl, -1)
+	num := StrReplace(A_GuiControl, "Trigger_htk", "")
   Key := % %A_GuiControl%
   SetHotkey(num, Key)
 return
 
 SetHotkey(num, key) {
 	found1 := false
-  	For k, in ob2 {
-		numz := k
-		For i, in ob2[k].hotkeys {
-			iHotkey := ob2[k].hotkeys[i]
-			if (key = iHotkey) {
-				found1 := true
-				dupx := k . i
-				break
-			}
+  	For tab, in settings.tabs {
+      tabI := A_Index
+      dupTabName := tab
+      For i, in settings.tabs[tab].hotkeys {
+        iHotkey := settings.tabs[tab].hotkeys[i]
+        if (key = iHotkey) {
+          found1 := true
+          dupx := tabI . "_" . i
+          break
+        }
 		}
-
 		if (found1 == true) {
       ; If duplicate hotkey is blank, do not alert it to user
       GuiControlGet, dupCtrl , , Trigger_htk%dupx%
@@ -348,18 +328,8 @@ SetHotkey(num, key) {
       }
 
       GuiControlGet, actTab , , AutoUHTabs
-      For k, in ob2 {
-        if (ob2[k].tabName = actTab) {
-          duplicateTabID := k
-          break
-        }
-      }
-      ; search for current active tab id
-      ; if current active id is different than duplicate hotkey tab id then msgbox it to the user
-      ; if hotkey is duplicate but in different tab
-      if (numz != duplicateTabID) {
-        tabNm := ob2[numz].tabName
-        MsgBox, Hotkey already exists in %tabNm% tab!
+      if (dupTabName != actTab) {
+        MsgBox, Hotkey already exists in %dupTabName% tab!
       }
 
       Loop,6 {
@@ -372,44 +342,60 @@ SetHotkey(num, key) {
 		}
 	}
 
-  i1 := SubStr(num, 1, 1)
-  i2 := SubStr(num, 2, 1)
-  oldHtk := ob2[i1].hotkeys[i2]
+  word_array := StrSplit(num, "_", "")
+  tabI := word_array[1]
+  ; convert tabI to key
+  For tab in settings.tabs {
+    if (tabI == A_Index) {
+      tabK := tab
+      break
+    }
+  }
+  hotI := word_array[2]
+  ;MsgBox, % tabI
+  ;MsgBox, % hotI
+  oldHtk := settings.tabs[tabK].hotkeys[hotI]
 	If (oldHtk) { ;If a hotkey was already saved...
 		Hotkey, %oldHtk%, Uhaczka, Off    ;     turn the old hotkey off
-		oldHtk := ob2[i1].hotkeys[i2] := false        ;     add the word 'OFF' to display in a message.
-    Loop % mouseButtons.Count() {
-      if (oldHtk == mouseButtons[A_Index]) {
-        GuiControl, , tHtkText%num%,
-      }
+		settings.tabs[tabK].hotkeys[hotI] := false        ;     add the word 'OFF' to display in a message.
+    if (HasVal(mouseButtons, oldHtk) > 0) { 
+      GuiControl, , tHtkText%tabI%_%hotI%,
     }
  	}
 
   if (!dupx) {
     Hotkey, ~%Key%, Uhaczka, On
-    ob2[i1].hotkeys[i2] := key
-    Loop % mouseButtons.Count() {
-      if (Key == mouseButtons[A_Index]) {
-        GuiControl, , tHtkText%num%, %key%
-      }
+    settings.tabs[tabK].hotkeys[hotI] := key
+
+    if (HasVal(mouseButtons, key) > 0) { 
+      GuiControl, , tHtkText%tabI%_%hotI%, %key%
+      GuiControl, , Trigger_htk%tabI%_%hotI%,
     }
+
+    if (HasVal(kbdKeys, key) > 0) {
+      GuiControl, , Trigger_htk%tabI%_%hotI%, %key%
+    }
+
     WinActivate, Program Manager ; lose focus
   }
 }
 
 Uhaczka:
-	if !(WinActive("Tibia -")) {
+	if !(WinActive("Tibia -")) or (WinActive("ahk_class Chrome_WidgetWin_1")) {
 		return
 	}
+  ;MsgBox, uha
 	thishot := A_ThisHotkey
 	thishot := StrReplace(thishot, "~", "")
 	; get last pressed hotkey, then search for this hotkey in the array of all
 	found := false
-	For key, in ob2 {
-		numz := key
-		For i, in ob2[key].hotkeys {
-			if (thishot == ob2[key].hotkeys[i]) {
+  targetCoords := "x0 y0"
+	For tab, in settings.tabs {
+		fnTab := tab
+		For i, in settings.tabs[tab].hotkeys {
+			if (thishot == settings.tabs[tab].hotkeys[i]) {
 				found := true
+        targetCoords := settings.tabs[tab].coords
 				break
 			}
 		}
@@ -418,8 +404,7 @@ Uhaczka:
 		}
 	}
 
-	GuiControlGet, coords , , TankerPos%numz%
-	GuiControlGet, UH_Htk , , UH_hotkey%numz%
+	GuiControlGet, UH_Htk , , UhRune_hotkey
 
 	LMod := false
 		For LiteralMod, Mod in Modifiers {
@@ -437,10 +422,8 @@ Uhaczka:
 	}
 
 	Sleep 1
-	ControlClick, %coords%, Tibia -,,Left
-
-  ;sleep 35
-  ;Send {k}
+	ControlClick, %targetCoords%, Tibia -,,Left
+  Sleep 50
 
 return
 
@@ -461,7 +444,12 @@ WatchCursor:
 		BlockInput, Mouse
 		GuiControl, Text, TankerPos%PixelBtnNum%, x%xpos% y%ypos%
     xy := "x"xpos " y"ypos
-    ob2[PixelBtnNum].coords := "x"xpos " y"ypos
+    For tab in settings.tabs {
+      if (A_Index == PixelBtnNum) {
+        settings.tabs[tab].coords := "x"xpos " y"ypos
+        break
+      }
+    }
 		SetTimer, WatchCursor, Off
 		ToolTip
 		WinActivate, %A_ScriptName%
@@ -470,7 +458,14 @@ return
 
 SaveCache(ExitReason, ExitCode)
 {
-  parsedObj := JSON.Dump(ob2)
+  GuiControlGet, UH_Htk , , UhRune_hotkey
+  settings.globals.uhHotkey := UH_Htk
+
+  WinGetPos, guiX, guiY,,, %Title%
+  guiPos := "x" . guiX . " y" guiY
+  settings.globals.guiPos := guiPos
+
+  parsedObj := JSON.Dump(settings)
   SaveINI(parsedObj, cachePath)
 }
 
@@ -479,23 +474,38 @@ SaveINI(json, file) {
   return
 }
 
-WM_Command(wP)
-{
-  Global tray_icon_go, tray_icon_paused
-  Static Suspend = 65305, Pause = 65306
+guiPosVerify(guiPos) {
+  guiPos := RegExReplace(guiPos, "x|y", "")
+  guiPosArr := StrSplit(guiPos, " ", "")
+  guiX := guiPosArr[1]
+  guiY := guiPosArr[2]
 
-  If (wP = Pause)	;select OR deselect?
-  {
-    If ! A_IsPaused												;Paused --> NOT Paused ?
-      Menu, TRAY, Icon, %tray_icon_paused%	;,,1
-    Else ;If A_IsPaused ?									   ;NOT Paused --> Paused ?
-      Menu, TRAY, Icon, %tray_icon_go%	;,,1
+  SysGet, minX, 76
+  SysGet, minY, 77
+
+  SysGet, totalX, 78
+  SysGet, maxY, 79
+
+  ;MsgBox, %guiX% %guiY% %minX% %totalX%
+  if ((guiX < minX) or (guiX > totalX)) {
+    guiX := Floor(A_ScreenWidth/2)-100
   }
-  Else ;(wP <> Pause)	(ie just R-CLICK systray icon)
-  {
-    If A_IsPaused
-      Menu, TRAY, Icon, %tray_icon_paused%	;,,1		;Menu, Tray, Icon, Shell32.dll, 110, 1 <-- maybe should use dll icons?
+
+  if ((guiY < minY) or (guiY > maxY)) {
+    guiY := Floor(A_ScreenHeight/2)-50
   }
+
+  guiPos := "x" guiX " y"guiY
+  return guiPos
+}
+
+HasVal(haystack, needle) {
+	if !(IsObject(haystack)) || (haystack.Length() = 0)
+		return 0
+	for index, value in haystack
+		if (value = needle)
+			return index
+	return 0
 }
 
 Obj2Str(obj) { 
